@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Rocket, Calendar, Loader2 } from "lucide-react";
+import Settings from './Settings';
 
 // Define proper types for calendar events
 interface CalendarEvent {
@@ -50,9 +51,11 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/check', {
+        const response = await fetch(`${Settings.API_URL}?type=google/auth-check`, {
           method: 'GET',
-          credentials: 'include'
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
         
         if (response.ok) {
@@ -73,7 +76,7 @@ function App() {
       setLoading(true);
       
       // Step 1: Get authorization URL from your backend
-      const response = await fetch('/api/auth/google', {
+      const response = await fetch(`${Settings.API_URL}?type=google/auth`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -105,7 +108,7 @@ function App() {
       setError(null);
       
       // Send query to your backend
-      const response = await fetch('/api/suggest', {
+      const response = await fetch(`${Settings.API_URL}?type=google/calendar-suggest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -133,7 +136,7 @@ function App() {
     try {
       setLoading(true);
       
-      const response = await fetch('/api/calendar/add', {
+      const response = await fetch(`${Settings.API_URL}?type=google/calendar-add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

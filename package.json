@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-dev": "vercel dev --debug"
+    "vercel-dev": "vercel dev"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",

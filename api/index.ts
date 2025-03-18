@@ -1,9 +1,5 @@
-import { allowCors } from "../util.js";
+import { allowCors } from "./util.js";
 import { google } from 'googleapis';
-
-interface Prompt {
-  text: string;
-}
 
 interface CalendarEvent {
   title?: string;
@@ -50,22 +46,24 @@ type Message = {
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID ?? '',
   process.env.GOOGLE_CLIENT_SECRET ?? '',
-  process.env.GOOGLE_REDIRECT_URI ?? ''
+  process.env.GOOGLE_REDIRECT_URI ?? 'http://localhost:3000/api'
 );
 
 // Define Google Calendar API scopes
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 
 async function handler(req, res) {
-  if (req.method === 'GET' && req.url === '/auth/check') {
+  const { type } = req.query; // Extract query parameter
+
+  if (req.method === 'GET' && type === 'google/auth-check') {
     await checkAuth(req, res);
-  } else if (req.method === 'GET' && req.url === '/auth/google') {
+  } else if (req.method === 'GET' && type === 'google/auth') {
     await getAuthUrl(req, res);
-  } else if (req.method === 'GET' && req.url?.startsWith('/auth/callback')) {
+  } else if (req.method === 'GET' && type === 'google/auth-callback') {
     await handleAuthCallback(req, res);
-  } else if (req.method === 'POST' && req.url === '/calendar/add') {
+  } else if (req.method === 'POST' && type === 'google/calendar-add') {
     await addToCalendar(req, res);
-  } else if (req.method === 'POST' && req.url === '/suggest') {
+  } else if (req.method === 'POST' && type === 'google/calendar-suggest') {
     await suggest(req, res);
   } else {
     res.status(405).json({ error: 'Method not allowed' });
@@ -100,6 +98,7 @@ async function checkAuth(req, res) {
 // Generate Google OAuth URL
 async function getAuthUrl(req, res) {
   try {
+    console.log(req) //TODO REMOVE, logging to prevent unused var
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
