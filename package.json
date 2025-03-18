@@ -17,6 +17,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.0.14",
     "@vercel/node": "^5.1.10",
+    "cookie": "^1.0.2",
     "googleapis": "^146.0.0",
     "lucide-react": "^0.482.0",
     "preline": "^2.7.0",

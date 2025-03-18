@@ -1,13 +1,7 @@
 export const allowCors = fn => async (req, res) => {
   const allowedOrigins = [
     'http://localhost:5173',
-    'https://www.worklens.io',
-    'https://www.worklens.ai',
-    'https://worklens.io',
-    'https://worklens.ai',
-    'https://auth0.com',
-    'https://www.linkedin.com',
-    'https://worklens.eu.auth0.com'
+    'https://cally-chi.vercel.app'
   ];
 
   // Get the origin of the incoming request

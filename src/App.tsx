@@ -55,12 +55,14 @@ function App() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          credentials: 'include'
         });
         
         if (response.ok) {
           const data: AuthCheckResponse = await response.json();
           setIsAuthenticated(data.authenticated);
+          console.log(data)
         }
       } catch (err) {
         console.error("Auth check failed:", err);
@@ -80,7 +82,8 @@ function App() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
       
       if (!response.ok) throw new Error('Failed to get auth URL');
@@ -141,12 +144,14 @@ function App() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ events })
+        body: JSON.stringify({ events }),
+        credentials: 'include'
       });
       
       if (!response.ok) throw new Error('Failed to add events to calendar');
       
       const result: CalendarAddResponse = await response.json();
+      console.log(result)
       alert('Events successfully added to your calendar!');
     } catch (err: any) {
       setError(err.message);
