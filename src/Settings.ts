@@ -1,6 +1,6 @@
 const SETTINGS_PROD = {
-  WEB_URL: "https://room2-eight.vercel.app/",
-  API_URL: "https://room2-eight.vercel.app/api"
+  WEB_URL: "https://cally-chi.vercel.app/",
+  API_URL: "https://cally-chi.vercel.app/api"
 };
 
 const SETTINGS_DEV = {

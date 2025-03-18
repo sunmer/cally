@@ -1,85 +1,227 @@
 import { allowCors } from "../util.js";
+import { google } from 'googleapis';
 
 interface Prompt {
-  id: number;
   text: string;
 }
 
-const prompts: Prompt[] = [
-  { 
-    id: 1, 
-    text: `You are a ThreeJS code generator. Generate code that modifies a ThreeJS scene based on this description: `
-  }
-];
+interface CalendarEvent {
+  title?: string;
+  summary?: string;
+  description?: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+  } | string;
+  end: {
+    dateTime?: string;
+    date?: string;
+  } | string;
+}
+
+interface GoogleCalendarEvent {
+  summary: string;
+  description: string;
+  start: {
+    dateTime: string;
+    timeZone: string;
+  };
+  end: {
+    dateTime: string;
+    timeZone: string;
+  };
+}
+
+interface TokenResponse {
+  refresh_token?: string | null;
+  access_token?: string | null;
+  token_type?: string | null;
+  id_token?: string | null;
+  expiry_date?: number | null;
+  scope?: string | string[] | null;
+}
 
 type Message = {
   role: 'system' | 'user' | 'assistant';
   content: string;
 };
 
+// Google OAuth configuration
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID ?? '',
+  process.env.GOOGLE_CLIENT_SECRET ?? '',
+  process.env.GOOGLE_REDIRECT_URI ?? ''
+);
+
+// Define Google Calendar API scopes
+const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+
 async function handler(req, res) {
-  if (req.method === 'GET') {
-    res.status(200).json("hello");
-  } else if (req.method === 'POST') {
+  if (req.method === 'GET' && req.url === '/auth/check') {
+    await checkAuth(req, res);
+  } else if (req.method === 'GET' && req.url === '/auth/google') {
+    await getAuthUrl(req, res);
+  } else if (req.method === 'GET' && req.url?.startsWith('/auth/callback')) {
+    await handleAuthCallback(req, res);
+  } else if (req.method === 'POST' && req.url === '/calendar/add') {
+    await addToCalendar(req, res);
+  } else if (req.method === 'POST' && req.url === '/suggest') {
     await suggest(req, res);
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
 }
 
-async function suggest(req, res) {
-  if (req.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
-  }
-
-  let promptId, text;
-
+// Check if user is authenticated
+async function checkAuth(req, res) {
   try {
-    promptId = req.body.promptId;
-    text = req.body.text;
+    const token = getTokenFromCookie(req);
+    
+    if (!token) {
+      return res.status(200).json({ authenticated: false });
+    }
+    
+    oauth2Client.setCredentials({
+      ...token,
+      scope: typeof token.scope === 'string' ? token.scope : undefined
+    });
+    
+    // Verify token is valid
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    await calendar.calendarList.list();
+    
+    return res.status(200).json({ authenticated: true });
   } catch (error) {
-    return new Response('Invalid JSON', { status: 400 });
+    console.error('Auth check error:', error);
+    return res.status(200).json({ authenticated: false });
   }
-
-  const foundPrompt = prompts.find((p) => p.id === promptId);
-  if (!foundPrompt) {
-    return new Response('Prompt not found', { status: 404 });
-  }
-
-  // Instruct the model to ONLY return valid JSON (no code fences, no comments).
-  const systemPrompt = `
-You are a ThreeJS expert who generates code snippets that modify existing ThreeJS scenes.
-
-The user has a room with:
-- Four walls (frontWall, backWall, leftWall, rightWall)
-- A floor
-- A point light
-- An ambient light
-- Stars in the background
-
-Your job is to return ONLY a JSON object with properties that can be used to modify the scene.
-You MUST output valid JSON and NOTHING else. 
-Do NOT wrap your JSON in triple backticks or any code fences.
-Do NOT include line comments (//) or block comments (/* ... */) in the JSON.
-
-Possible properties:
-{
-  "wallColor": "#hexcode",
-  "floorColor": "#hexcode",
-  "ambientLightColor": "#hexcode", 
-  "ambientLightIntensity": number,
-  "pointLightColor": "#hexcode",
-  "pointLightIntensity": number,
-  "skyColor": "#hexcode",
-  "starColor": "#hexcode",
-  "starSize": number,
-  "starCount": number,
-  "addObjects": [array of strings containing properly escaped code],
-  "customCode": "any additional code as a properly escaped string"
 }
 
-Only include the properties that need to change based on the user's query.
-No extra text. No code fences. No comments.
+// Generate Google OAuth URL
+async function getAuthUrl(req, res) {
+  try {
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: SCOPES,
+      prompt: 'consent' // Force consent screen to get refresh_token
+    });
+    
+    return res.status(200).json({ authUrl });
+  } catch (error) {
+    console.error('Error generating auth URL:', error);
+    return res.status(500).json({ error: 'Failed to generate authorization URL' });
+  }
+}
+
+// Handle Google OAuth callback
+async function handleAuthCallback(req, res) {
+  const code = req.query?.code;
+  
+  if (!code) {
+    return res.status(400).json({ error: 'Authorization code is required' });
+  }
+  
+  try {
+    // Exchange code for tokens
+    const { tokens } = await oauth2Client.getToken(code);
+    
+    // Store tokens securely (using HTTP-only cookies in this example)
+    setTokenCookie(res, tokens);
+    
+    // Redirect to the app's main page
+    return res.redirect('/');
+  } catch (error) {
+    console.error('Error handling auth callback:', error);
+    return res.status(500).json({ error: 'Failed to complete authentication' });
+  }
+}
+
+// Add events to Google Calendar
+async function addToCalendar(req, res) {
+  try {
+    const { events } = req.body as { events: CalendarEvent[] };
+    
+    if (!events || !Array.isArray(events)) {
+      return res.status(400).json({ error: 'Events array is required' });
+    }
+    
+    const token = getTokenFromCookie(req);
+    
+    if (!token) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
+    oauth2Client.setCredentials({
+      ...token,
+      scope: typeof token.scope === 'string' ? token.scope : undefined
+    });
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    
+    const results: any[] = [];
+    
+    // Add each event to Google Calendar
+    for (const event of events) {
+      const calendarEvent: GoogleCalendarEvent = {
+        summary: event.title || event.summary || '',
+        description: event.description || '',
+        start: {
+          dateTime: new Date(typeof event.start === 'string' ? event.start : (event.start.dateTime || '')).toISOString(),
+          timeZone: 'UTC'
+        },
+        end: {
+          dateTime: new Date(typeof event.end === 'string' ? event.end : (event.end.dateTime || '')).toISOString(),
+          timeZone: 'UTC'
+        }
+      };
+      
+      const result = await calendar.events.insert({
+        calendarId: 'primary',
+        requestBody: calendarEvent
+      });
+      
+      if (result.data) {
+        results.push(result.data);
+      }
+    }
+    
+    return res.status(200).json({ success: true, events: results });
+  } catch (error) {
+    console.error('Error adding events to calendar:', error);
+    return res.status(500).json({ error: 'Failed to add events to calendar' });
+  }
+}
+
+// Original function for suggesting calendar events
+async function suggest(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  let text: string;
+
+  try {
+    text = req.body.text;
+    
+    if (!text) {
+      return res.status(400).json({ error: 'Text parameter is required' });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  // Revised system prompt to only generate code snippets
+  const systemPrompt = `
+Please return a JSON object which can be saved as a calendar series based on this request ${text}
+Generate an array of calendar events with the following structure:
+[
+  {
+    "title": "Event Title",
+    "description": "Detailed description of the event",
+    "start": "2025-03-20T09:00:00Z",
+    "end": "2025-03-20T10:00:00Z"
+  }
+]
+Make sure dates are in ISO format and realistic based on the current date.
 `;
 
   const messages: Message[] = [
@@ -92,7 +234,7 @@ No extra text. No code fences. No comments.
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.API_KEY_OPENAI}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: "gpt-4o-2024-08-06",
@@ -108,42 +250,36 @@ No extra text. No code fences. No comments.
 
     const responseData = await response.json();
 
-    // 1) Get the text from the model's reply
-    let rawContent = responseData.choices[0].message.content || "";
-
-    // 2) Strip out any triple-backtick fences
-    rawContent = rawContent
-      .replace(/```json/gi, "")   // remove ```json (case-insensitive)
-      .replace(/```/g, "")        // remove ```
-
-    // 3) Strip out any single-line JS comments if they appear
-    //    (If the LLM sneaks them in, they'd break JSON.parse.)
-    rawContent = rawContent.replace(/\/\/.*$/gm, "");
-
-    // 4) Optionally remove multiline comments if the model somehow includes them
-    rawContent = rawContent.replace(/\/\*[\s\S]*?\*\//g, "");
-
-    // 5) Trim whitespace
-    rawContent = rawContent.trim();
-
-    // 6) Extract only the portion from the first '{' to the last '}' 
-    //    in case there's extraneous text outside the JSON.
-    const startIndex = rawContent.indexOf("{");
-    const endIndex = rawContent.lastIndexOf("}");
-    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-      rawContent = rawContent.substring(startIndex, endIndex + 1);
-    }
-
-    // 7) Finally parse the cleaned string as JSON
-    const sceneModifications = JSON.parse(rawContent);
-
-    // 8) Return the JSON result
-    res.status(200).json(sceneModifications);
+    // Return the JSON result
+    res.status(200).json(responseData);
 
   } catch (error) {
     console.error('Error processing OpenAI request:', error);
     return res.status(500).json({ error: 'Error processing OpenAI request' });
   }
+}
+
+// Helper functions for token management
+function getTokenFromCookie(req): TokenResponse | null {
+  try {
+    const tokenCookie = req.cookies?.['google_auth_token'];
+    if (!tokenCookie) return null;
+    
+    return JSON.parse(tokenCookie);
+  } catch (error) {
+    console.error('Error parsing token from cookie:', error);
+    return null;
+  }
+}
+
+function setTokenCookie(res, tokens: TokenResponse): void {
+  // Set token as HTTP-only cookie (more secure than localStorage)
+  res.cookie('google_auth_token', JSON.stringify(tokens), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: 'lax'
+  });
 }
 
 export default allowCors(handler);
