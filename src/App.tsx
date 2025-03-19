@@ -35,13 +35,13 @@ type CalendarAddResponse = {
 };
 
 function App() {
-  // Updated state: now holds a schedule (with title and events) instead of an array of events.
   const [schedule, setSchedule] = useState<CalendarSchedule | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Check auth status on page load
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -60,6 +60,21 @@ function App() {
     };
     checkAuth();
   }, []);
+
+  // If the user was redirected after OAuth, check for a pending schedule
+  useEffect(() => {
+    if (isAuthenticated && !schedule) {
+      const storedSchedule = localStorage.getItem("pendingSchedule");
+      if (storedSchedule) {
+        const scheduleFromStorage = JSON.parse(storedSchedule);
+        setSchedule(scheduleFromStorage);
+        localStorage.removeItem("pendingSchedule");
+        // Automatically add events to the calendar after authentication
+        addToCalendar(scheduleFromStorage);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const handleAuth = async () => {
     setLoading(true);
@@ -97,7 +112,6 @@ function App() {
       
       const scheduleData: CalendarSchedule = JSON.parse(data.choices[0].message.content);
       setSchedule(scheduleData);
-
       console.log(scheduleData)
     } catch (err: any) {
       setError(err.message);
@@ -107,19 +121,29 @@ function App() {
     }
   };
 
-  const addToCalendar = async () => {
-    if (!schedule) return;
+  // Modified addToCalendar accepts a schedule parameter so we can reuse it after redirect.
+  const addToCalendar = async (currentSchedule: CalendarSchedule | null = schedule) => {
+    if (!currentSchedule) return;
     setLoading(true);
     try {
-      const res = await fetch(`${Settings.API_URL}?type=google/calendar-add`, {
+      const calendarAddResponse = await fetch(`${Settings.API_URL}?type=google/calendar-add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(schedule),
+        body: JSON.stringify(currentSchedule),
         credentials: 'include'
       });
-      if (!res.ok) throw new Error('Failed to add events to calendar');
-      const result: CalendarAddResponse = await res.json();
+      if (!calendarAddResponse.ok) throw new Error('Failed to add events to calendar');
+      const result: CalendarAddResponse = await calendarAddResponse.json();
       console.log(result);
+
+      const createEventsResponse = await fetch(`${Settings.API_URL}/create-events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(schedule)
+      });
+
+      console.log(createEventsResponse)
       alert('Events successfully added to your calendar!');
     } catch (err: any) {
       setError(err.message);
@@ -129,68 +153,45 @@ function App() {
     }
   };
 
-  const handleSaveEvents = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${Settings.API_URL}/create-events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(schedule)
-      });
-      if (!res.ok) throw new Error('Failed to save events');
-      const result = await res.json();
-      console.log(result);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Since the start/end are now simple ISO strings, we can simplify formatDate.
   const formatDate = (dateValue: string): string => {
     return new Date(dateValue).toLocaleString();
   };
 
   const renderEvents = () => {
-    if (!isAuthenticated || !schedule || schedule.events.length === 0) return null;
+    if (!schedule || schedule.events.length === 0) return null;
     return (
-      <>
-        <div className="mt-8 bg-neutral-800 rounded-lg p-6">
-          <h2 className="text-xl font-medium text-white mb-4">{schedule.title}</h2>
-          <div className="space-y-4">
-            {schedule.events.map((event, index) => (
-              <div key={index} className="bg-neutral-700 p-4 rounded-md">
-                <h3 className="text-white font-medium">{event.title}</h3>
-                <p className="text-neutral-300 text-sm mt-1">
-                  {formatDate(event.start)} - {formatDate(event.end)}
-                </p>
-                {event.description && (
-                  <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
-                )}
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={addToCalendar}
-            disabled={loading}
-            className="mt-4 py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg text-gray-800 shadow-sm hover:bg-green-200 bg-green-100 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
-            Add to My Calendar
-          </button>
+      <div className="mt-8 bg-neutral-800 rounded-lg p-6">
+        <h2 className="text-xl font-medium text-white mb-4">{schedule.title}</h2>
+        <div className="space-y-4">
+          {schedule.events.map((event, index) => (
+            <div key={index} className="bg-neutral-700 p-4 rounded-md">
+              <h3 className="text-white font-medium">{event.title}</h3>
+              <p className="text-neutral-300 text-sm mt-1">
+                {formatDate(event.start)} - {formatDate(event.end)}
+              </p>
+              {event.description && (
+                <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
+              )}
+            </div>
+          ))}
         </div>
-        <div className="mt-8 bg-neutral-800 rounded-lg p-6">
-          <button
-            onClick={handleSaveEvents}
-            disabled={loading}
-            className="mt-4 py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg text-gray-800 shadow-sm hover:bg-green-200 bg-green-100 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Events"}
-          </button>
-        </div>
-      </>
+        <button
+          onClick={() => {
+            if (!isAuthenticated) {
+              // Save the schedule so it can be added automatically after OAuth
+              localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
+              handleAuth();
+            } else {
+              addToCalendar();
+            }
+          }}
+          disabled={loading}
+          className="mt-4 py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg text-gray-800 shadow-sm hover:bg-green-200 bg-green-100 disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
+          Add to My Calendar
+        </button>
+      </div>
     );
   };
 
@@ -207,46 +208,31 @@ function App() {
             Get any type of learning schedule added directly to your calendar
           </p>
           <div className="flex flex-col gap-y-6 mt-8">
-            {!isAuthenticated ? (
-              <div className="inline-flex flex-wrap gap-2">
+            {/* The generation form is always visible */}
+            <form onSubmit={handleSubmit} className="w-full max-w-2xl">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="e.g., 'A 3-week course to learn Spanish basics'"
+                  className="flex-1 px-4 py-3 bg-neutral-800 text-white rounded-lg border border-neutral-700 focus:outline-none focus:border-teal-400"
+                />
                 <button
-                  type="button"
-                  onClick={handleAuth}
-                  disabled={loading}
-                  className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg text-gray-800 shadow-sm hover:bg-teal-200 bg-teal-100 disabled:opacity-50"
+                  type="submit"
+                  disabled={loading || query.length < 6}
+                  className="px-6 py-3 bg-teal-100 text-gray-800 rounded-lg font-medium hover:bg-teal-200 disabled:opacity-50"
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
-                  Connect Google Calendar
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Generate"}
                 </button>
               </div>
-            ) : (
-              <>
-                <form onSubmit={handleSubmit} className="w-full max-w-2xl">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="e.g., 'A 3-week course to learn Spanish basics'"
-                      className="flex-1 px-4 py-3 bg-neutral-800 text-white rounded-lg border border-neutral-700 focus:outline-none focus:border-teal-400"
-                    />
-                    <button
-                      type="submit"
-                      disabled={loading || query.length < 6}
-                      className="px-6 py-3 bg-teal-100 text-gray-800 rounded-lg font-medium hover:bg-teal-200 disabled:opacity-50"
-                    >
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Generate"}
-                    </button>
-                  </div>
-                </form>
-                {error && (
-                  <div className="bg-red-900/30 text-red-300 px-4 py-3 rounded-lg">
-                    {error}
-                  </div>
-                )}
-                {renderEvents()}
-              </>
+            </form>
+            {error && (
+              <div className="bg-red-900/30 text-red-300 px-4 py-3 rounded-lg">
+                {error}
+              </div>
             )}
+            {renderEvents()}
           </div>
         </div>
       </div>

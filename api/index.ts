@@ -83,7 +83,7 @@ async function checkAuth(req, res) {
 }
 
 // Generate Google OAuth URL
-async function getAuthUrl(req, res) {
+async function getAuthUrl(_req, res) {
   try {
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
