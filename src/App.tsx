@@ -3,35 +3,40 @@ import { Rocket, Calendar, Loader2 } from "lucide-react";
 import Settings from './Settings';
 import Footer from './Footer';
 
-interface CalendarEvent {
-  title?: string;
-  summary?: string;
-  description?: string;
-  start: { dateTime?: string; date?: string } | string;
-  end: { dateTime?: string; date?: string } | string;
-}
+type CalendarEventItem = {
+  title: string;
+  description: string;
+  start: string;
+  end: string;
+};
 
-interface AuthCheckResponse {
+type CalendarSchedule = {
+  title: string;
+  events: CalendarEventItem[];
+};
+
+type AuthCheckResponse = {
   authenticated: boolean;
-}
+};
 
-interface AuthUrlResponse {
+type AuthUrlResponse = {
   authUrl: string;
-}
+};
 
-interface SuggestResponse {
+type SuggestResponse = {
   choices: {
     message: { content: string };
   }[];
-}
+};
 
-interface CalendarAddResponse {
+type CalendarAddResponse = {
   success: boolean;
   events: any[];
-}
+};
 
 function App() {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  // Updated state: now holds a schedule (with title and events) instead of an array of events.
+  const [schedule, setSchedule] = useState<CalendarSchedule | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -89,8 +94,11 @@ function App() {
       });
       if (!res.ok) throw new Error('Failed to get events');
       const data: SuggestResponse = await res.json();
-      const generatedEvents: CalendarEvent[] = JSON.parse(data.choices[0].message.content);
-      setEvents(generatedEvents);
+      
+      const scheduleData: CalendarSchedule = JSON.parse(data.choices[0].message.content);
+      setSchedule(scheduleData);
+
+      console.log(scheduleData)
     } catch (err: any) {
       setError(err.message);
       console.error("Error fetching events:", err);
@@ -100,13 +108,13 @@ function App() {
   };
 
   const addToCalendar = async () => {
-    if (!events.length) return;
+    if (!schedule) return;
     setLoading(true);
     try {
       const res = await fetch(`${Settings.API_URL}?type=google/calendar-add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ events }),
+        body: JSON.stringify(schedule),
         credentials: 'include'
       });
       if (!res.ok) throw new Error('Failed to add events to calendar');
@@ -128,43 +136,33 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          sub: 'foobar',
-          events: [{ name: 'test event' }],
-          title: 'test event'
-        })
+        body: JSON.stringify(schedule)
       });
       if (!res.ok) throw new Error('Failed to save events');
       const result = await res.json();
       console.log(result);
-      alert('Events saved successfully!');
     } catch (err) {
       console.error(err);
-      alert('Error saving events');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (dateValue: string | { dateTime?: string; date?: string }): string => {
-    if (typeof dateValue === 'string') {
-      return new Date(dateValue).toLocaleString();
-    }
-    if (dateValue.dateTime) return new Date(dateValue.dateTime).toLocaleString();
-    if (dateValue.date) return new Date(dateValue.date).toLocaleString();
-    return 'Invalid date';
+  // Since the start/end are now simple ISO strings, we can simplify formatDate.
+  const formatDate = (dateValue: string): string => {
+    return new Date(dateValue).toLocaleString();
   };
 
   const renderEvents = () => {
-    if (!isAuthenticated || !events.length) return null;
+    if (!isAuthenticated || !schedule || schedule.events.length === 0) return null;
     return (
       <>
         <div className="mt-8 bg-neutral-800 rounded-lg p-6">
-          <h2 className="text-xl font-medium text-white mb-4">Generated Calendar Events</h2>
+          <h2 className="text-xl font-medium text-white mb-4">{schedule.title}</h2>
           <div className="space-y-4">
-            {events.map((event, index) => (
+            {schedule.events.map((event, index) => (
               <div key={index} className="bg-neutral-700 p-4 rounded-md">
-                <h3 className="text-white font-medium">{event.title || event.summary}</h3>
+                <h3 className="text-white font-medium">{event.title}</h3>
                 <p className="text-neutral-300 text-sm mt-1">
                   {formatDate(event.start)} - {formatDate(event.end)}
                 </p>

@@ -1,6 +1,6 @@
+import { CalendarSchedule, GoogleCalendarEvent } from "./types.js";
 import { allowCors } from "./util.js";
 import { google } from 'googleapis';
-
 
 const isProd = process.env.VERCEL_ENV === 'production';
 
@@ -8,42 +8,17 @@ const WEB_URL = isProd ?
   `https://cally-chi.vercel.app/` :
   `http://localhost:5173/`;
 
+const COOKIE_DOMAIN = isProd ? '.cally-chi.vercel.app' : '';
 
-interface CalendarEvent {
-  title?: string;
-  summary?: string;
-  description?: string;
-  start: {
-    dateTime?: string;
-    date?: string;
-  } | string;
-  end: {
-    dateTime?: string;
-    date?: string;
-  } | string;
-}
 
-interface GoogleCalendarEvent {
-  summary: string;
-  description: string;
-  start: {
-    dateTime: string;
-    timeZone: string;
-  };
-  end: {
-    dateTime: string;
-    timeZone: string;
-  };
-}
-
-export interface TokenResponse {
+export type TokenResponse = {
   refresh_token?: string | null;
   access_token?: string | null;
   token_type?: string | null;
   id_token?: string | null;
   expiry_date?: number | null;
   scope?: string | string[] | null;
-}
+};
 
 type Message = {
   role: 'system' | 'user' | 'assistant';
@@ -58,7 +33,7 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 // Define Google Calendar API scopes
-const SCOPES = ['openid', 'https://www.googleapis.com/auth/calendar'];
+const SCOPES = ['openid', 'email', 'https://www.googleapis.com/auth/calendar'];
 
 async function handler(req, res) {
   const { type } = req.query; // Extract query parameter
@@ -82,26 +57,24 @@ async function handler(req, res) {
 async function checkAuth(req, res) {
   try {
     const token = getTokenFromCookie(req);
-    
+
     if (!token) {
       return res.status(200).json({ authenticated: false });
     }
-    
+
     oauth2Client.setCredentials({
       ...token,
       scope: typeof token.scope === 'string' ? token.scope : undefined
     });
-    
-    // Wrap the calendar list call in a try-catch to catch authentication issues
+
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     try {
       await calendar.calendarList.list();
     } catch (error) {
       console.error('Error listing calendars:', error);
-      // Return an unauthorized error if the token is invalid or expired.
       return res.status(401).json({ error: 'Invalid or expired authentication token' });
     }
-    
+
     return res.status(200).json({ authenticated: true });
   } catch (error) {
     console.error('Auth check error:', error);
@@ -112,13 +85,12 @@ async function checkAuth(req, res) {
 // Generate Google OAuth URL
 async function getAuthUrl(req, res) {
   try {
-    console.log(req)
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
-      prompt: 'consent' // Force consent screen to get refresh_token
+      prompt: 'consent'
     });
-    
+
     return res.status(200).json({ authUrl });
   } catch (error) {
     console.error('Error generating auth URL:', error);
@@ -129,13 +101,12 @@ async function getAuthUrl(req, res) {
 // Handle Google OAuth callback
 async function handleAuthCallback(req, res) {
   const code = req.query?.code;
-  
+
   if (!code) {
     return res.status(400).json({ error: 'Authorization code is required' });
   }
-  
+
   try {
-    // Exchange code for tokens with a try-catch around the getToken call.
     let tokens;
     try {
       const response = await oauth2Client.getToken(code);
@@ -144,11 +115,8 @@ async function handleAuthCallback(req, res) {
       console.error('Error getting tokens from code:', error);
       return res.status(500).json({ error: 'Failed to exchange authorization code for tokens' });
     }
-    
-    // Store tokens securely (using HTTP-only cookies in this example)
+
     setTokenCookie(res, tokens);
-    
-    // Redirect to the app's main page
     return res.redirect(WEB_URL);
   } catch (error) {
     console.error('Error handling auth callback:', error);
@@ -159,41 +127,41 @@ async function handleAuthCallback(req, res) {
 // Add events to Google Calendar
 async function addToCalendar(req, res) {
   try {
-    const { events } = req.body as { events: CalendarEvent[] };
-    
-    if (!events || !Array.isArray(events)) {
-      return res.status(400).json({ error: 'Events array is required' });
+    // Expecting the request body to match the new CalendarSchedule type
+    const schedule = req.body as CalendarSchedule;
+
+    if (!schedule || !Array.isArray(schedule.events)) {
+      return res.status(400).json({ error: 'Calendar schedule with events array is required' });
     }
-    
+
     const token = getTokenFromCookie(req);
-    
+
     if (!token) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
-    
+
     oauth2Client.setCredentials({
       ...token,
       scope: typeof token.scope === 'string' ? token.scope : undefined
     });
-    
+
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     const results: any[] = [];
-    
-    // Add each event to Google Calendar with its own error handling
-    for (const event of events) {
+
+    for (const event of schedule.events) {
       const calendarEvent: GoogleCalendarEvent = {
-        summary: event.title || event.summary || '',
-        description: event.description || '',
+        summary: event.title,
+        description: event.description,
         start: {
-          dateTime: new Date(typeof event.start === 'string' ? event.start : (event.start.dateTime || '')).toISOString(),
+          dateTime: new Date(event.start).toISOString(),
           timeZone: 'UTC'
         },
         end: {
-          dateTime: new Date(typeof event.end === 'string' ? event.end : (event.end.dateTime || '')).toISOString(),
+          dateTime: new Date(event.end).toISOString(),
           timeZone: 'UTC'
         }
       };
-      
+
       try {
         const result = await calendar.events.insert({
           calendarId: 'primary',
@@ -204,11 +172,10 @@ async function addToCalendar(req, res) {
         }
       } catch (error) {
         console.error(`Error adding event "${calendarEvent.summary}":`, error);
-        // Return error immediately for the problematic event; alternatively, you could log and continue.
         return res.status(500).json({ error: `Failed to add event "${calendarEvent.summary}"` });
       }
     }
-    
+
     return res.status(200).json({ success: true, events: results });
   } catch (error) {
     console.error('Error adding events to calendar:', error);
@@ -216,7 +183,7 @@ async function addToCalendar(req, res) {
   }
 }
 
-// Original function for suggesting calendar events
+// Suggest calendar events based on a text request
 async function suggest(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -226,7 +193,6 @@ async function suggest(req, res) {
 
   try {
     text = req.body.text;
-    
     if (!text) {
       return res.status(400).json({ error: 'Text parameter is required' });
     }
@@ -234,24 +200,43 @@ async function suggest(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  const systemPrompt = 
-`Please generate a valid JSON array of calendar events based on this request: "${text}".
-- If the user does **not** provide a specific date, default the first event to **start from next week**.
-- If the user specifies a date, use that date.
-- All dates must be in **ISO 8601 format** (e.g., "2025-03-25T09:00:00Z").
-- Do **not** return any markdown formatting or explanations, just raw JSON.
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isoTomorrow = tomorrow.toISOString();
+
+  const systemPrompt =
+    `You are a helpful calendar assistant. Generate a valid JSON response based on the user's request. The JSON must have a "title" key with a concise description (max 3 words) and an "events" key containing an array of event objects. Each event object should include:
+- "title": the event title
+- "description": detailed description of the event
+- "start": start datetime in ISO 8601 format (e.g., "2025-03-25T09:00:00Z")
+- "end": end datetime in ISO 8601 format
+
+Important scheduling rules:
+1. Each event must have a realistic duration (no events shorter than 15 minutes or longer than 8 hours)
+2. Events must have different start and end times
+3. If a specific date is not provided, use ${isoTomorrow} as the base date
+4. For multiple events, ensure they don't overlap and have reasonable spacing between them
 
 Example response:
-[
-  {
-    "title": "Event Title",
-    "description": "Detailed description of the event",
-    "start": "2025-03-25T09:00:00Z",
-    "end": "2025-03-25T10:00:00Z"
-  }
-]`;
+{
+  "title": "Daily Schedule",
+  "events": [
+    {
+      "title": "Morning Event",
+      "description": "Description of morning event",
+      "start": "2025-03-25T09:00:00Z",
+      "end": "2025-03-25T10:30:00Z"
+    },
+    {
+      "title": "Afternoon Event",
+      "description": "Description of afternoon event",
+      "start": "2025-03-25T13:00:00Z",
+      "end": "2025-03-25T14:00:00Z"
+    }
+  ]
+}`;
 
-  const messages: Message[] = [
+  const messages = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: text }
   ];
@@ -266,20 +251,20 @@ Example response:
       body: JSON.stringify({
         model: "gpt-4o-2024-08-06",
         messages: messages,
-        stream: false, 
+        stream: false,
+        response_format: { "type": "json_object" },
         temperature: 0,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI request failed with status ${response.status}`);
+      const errorText = await response.text(); // Capture full response
+      console.error('OpenAI API Error:', errorText); // Log full response
+      throw new Error(`OpenAI request failed: ${errorText}`);
     }
 
     const responseData = await response.json();
-
-    // Return the JSON result
     res.status(200).json(responseData);
-
   } catch (error) {
     console.error('Error processing OpenAI request:', error);
     return res.status(500).json({ error: 'Error processing OpenAI request' });
@@ -291,7 +276,6 @@ function getTokenFromCookie(req): TokenResponse | null {
   try {
     const tokenCookie = req.cookies?.['google_auth_token'];
     if (!tokenCookie) return null;
-    
     return JSON.parse(tokenCookie);
   } catch (error) {
     console.error('Error parsing token from cookie:', error);
@@ -300,16 +284,13 @@ function getTokenFromCookie(req): TokenResponse | null {
 }
 
 function setTokenCookie(res, tokens: TokenResponse): void {
-  const baseCookieSettings = `HttpOnly; Path=/; Max-Age=604800`; // 7 days (adjust as needed)
-
+  const baseCookieSettings = `HttpOnly; Path=/; Max-Age=604800`;
   let cookieSettings = isProd
-    ? `${baseCookieSettings}; Secure; SameSite=Lax; Domain=.cally-chi.vercel.app`
-    : baseCookieSettings; // No Secure, SameSite, or Domain in dev
-
+    ? `${baseCookieSettings}; Secure; SameSite=Lax; Domain=${COOKIE_DOMAIN}`
+    : baseCookieSettings;
   res.setHeader('Set-Cookie', [
     `google_auth_token=${JSON.stringify(tokens)}; ${cookieSettings}`
   ]);
 }
-
 
 export default allowCors(handler);
