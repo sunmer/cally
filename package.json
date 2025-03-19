@@ -19,11 +19,14 @@
     "@vercel/node": "^5.1.10",
     "cookie": "^1.0.2",
     "googleapis": "^146.0.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.482.0",
+    "pg": "^8.14.1",
     "preline": "^2.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "three": "^0.174.0",
+    "uuidv7": "^1.0.2",
     "vite-plugin-svgr": "^4.3.0"
   },
   "devDependencies": {

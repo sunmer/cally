@@ -1,6 +1,7 @@
 import { allowCors } from "./util.js";
 import { google } from 'googleapis';
 
+
 const isProd = process.env.VERCEL_ENV === 'production';
 
 const WEB_URL = isProd ?
@@ -35,7 +36,7 @@ interface GoogleCalendarEvent {
   };
 }
 
-interface TokenResponse {
+export interface TokenResponse {
   refresh_token?: string | null;
   access_token?: string | null;
   token_type?: string | null;
@@ -57,7 +58,7 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 // Define Google Calendar API scopes
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const SCOPES = ['openid', 'https://www.googleapis.com/auth/calendar'];
 
 async function handler(req, res) {
   const { type } = req.query; // Extract query parameter
