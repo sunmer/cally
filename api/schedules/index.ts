@@ -5,7 +5,7 @@ import { allowCors } from '../util.js';
 import jwt from 'jsonwebtoken';
 import { query } from '../db.js';
 
-const GOOGLE_OAUTH_PREFIX = 'google';
+const GOOGLE_OAUTH_PREFIX = 'google:';
 
 // Helper to extract token from cookie
 function getTokenFromCookie(req): TokenResponse | null {
@@ -38,6 +38,8 @@ function getSubAndEmailFromToken(token) {
 async function handler(req, res) {
   if (req.method === 'POST') {
     await createEvents(req, res);
+  } else if(req.method === 'GET') {
+    await getEvents(req, res);
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
@@ -68,14 +70,14 @@ const createEvents = async (req, res) => {
     const { sub, email } = tokenData;
 
     // Check if the user already exists
-    const userResult = await query(`SELECT id FROM users WHERE sub = $1`, [sub]);
+    const userResult = await query(`SELECT id FROM users WHERE sub = $1`, [GOOGLE_OAUTH_PREFIX + sub]);
 
     let userId;
     if (userResult.rowCount === 0) {
       const newUuidUser = uuidv7();
       const newUser = await query(
         `INSERT INTO users (sub, email, uuid) VALUES ($1, $2, $3) RETURNING id`,
-        [`${GOOGLE_OAUTH_PREFIX}:${sub}`, email, newUuidUser]
+        [`${GOOGLE_OAUTH_PREFIX}${sub}`, email, newUuidUser]
       );
       console.log(`Created new user with sub: ${sub}`);
       userId = newUser.rows[0].id;
@@ -98,5 +100,39 @@ const createEvents = async (req, res) => {
     return res.status(500).json({ error: 'Failed to process events' });
   }
 };
+
+const getEvents = async (req, res) => {
+  try {
+    // Extract the token from the cookie and then the sub from the token
+    const token = getTokenFromCookie(req);
+    if (!token) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const tokenData = getSubAndEmailFromToken(token);
+    if (!tokenData) {
+      console.error('Token structure:', JSON.stringify(token, null, 2));
+      return res.status(400).json({ error: 'Failed to extract user information' });
+    }
+
+    const { sub } = tokenData;
+
+    // Check if the user already exists
+    const result = await query(
+      `SELECT e.title, e.events, e.uuid, e.created
+       FROM events e
+       JOIN users u ON e.user_id = u.id
+       WHERE u.sub = $1`,
+      [GOOGLE_OAUTH_PREFIX + sub]
+    );
+
+
+    return res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error processing events:', error);
+    return res.status(500).json({ error: 'Failed to process events' });
+  }
+};
+
 
 export default allowCors(handler);
