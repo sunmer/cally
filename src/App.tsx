@@ -203,10 +203,6 @@ function App() {
     }
   };
 
-  const formatDate = (dateValue: string): string => {
-    return new Date(dateValue).toLocaleString();
-  };
-
   const renderEvents = () => {
     if (!schedule || schedule.events.length === 0) return null;
     return (
