@@ -25,6 +25,8 @@
     "preline": "^2.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-slick": "^0.30.3",
+    "slick-carousel": "^1.8.1",
     "three": "^0.174.0",
     "uuidv7": "^1.0.2",
     "vite-plugin-svgr": "^4.3.0"

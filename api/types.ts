@@ -1,3 +1,5 @@
+export const GOOGLE_OAUTH_PREFIX = 'google:';
+
 export type CalendarEventItem = {
   title: string;
   description: string;

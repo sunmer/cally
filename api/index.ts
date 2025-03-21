@@ -8,7 +8,7 @@ const WEB_URL = isProd ?
   `https://cally-chi.vercel.app/` :
   `http://localhost:5173/`;
 
-const COOKIE_DOMAIN = isProd ? '.cally-chi.vercel.app' : '';
+const COOKIE_DOMAIN = '.cally-chi.vercel.app';
 
 
 export type TokenResponse = {
@@ -37,6 +37,8 @@ async function handler(req, res) {
     await checkAuth(req, res);
   } else if (req.method === 'GET' && type === 'google/auth') {
     await getAuthUrl(req, res);
+  } else if (req.method === 'GET' && type === 'google/logout') {
+      await logout(req, res);
   } else if (req.method === 'GET' && type === 'google/auth-callback') {
     await handleAuthCallback(req, res);
   } else if (req.method === 'POST' && type === 'google/calendar-add') {
@@ -53,7 +55,7 @@ async function checkAuth(req, res) {
   try {
     const token = getTokenFromCookie(req);
 
-    if (!token) {
+    if (!token || !token.access_token) {
       return res.status(200).json({ authenticated: false });
     }
 
@@ -64,16 +66,87 @@ async function checkAuth(req, res) {
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     try {
+      // Verify token is valid by making a calendar API request
       await calendar.calendarList.list();
+      
+      // If successful, extract user info (optional)
+      let userInfo = {};
+      try {
+        const tokenInfo = await oauth2Client.getTokenInfo(token.access_token);
+        userInfo = {
+          email: tokenInfo.email,
+          sub: tokenInfo.sub,
+          // Don't include sensitive token details
+        };
+      } catch (error) {
+        console.error('Error getting user info:', error);
+        // Continue anyway since we verified calendar access
+      }
+      
+      // Make sure token is fresh by refreshing it if needed
+      if (token.expiry_date && Date.now() > token.expiry_date - 300000) { // Refresh if < 5 mins left
+        const { credentials } = await oauth2Client.refreshAccessToken();
+        // Update token in cookie
+        setTokenCookie(res, credentials);
+      }
+      
+      // Return authenticated status with minimal user info (no tokens)
+      return res.status(200).json({ 
+        authenticated: true,
+        user: userInfo 
+      });
+      
     } catch (error) {
-      console.error('Error listing calendars:', error);
-      return res.status(401).json({ error: 'Invalid or expired authentication token' });
+      console.error('Error verifying token:', error);
+      // Clear invalid token cookie
+      res.setHeader('Set-Cookie', [`google_auth_token=; HttpOnly; Path=/; Max-Age=0`]);
+      return res.status(401).json({ authenticated: false, error: 'Invalid or expired authentication token' });
     }
-
-    return res.status(200).json({ authenticated: true });
   } catch (error) {
     console.error('Auth check error:', error);
     return res.status(200).json({ authenticated: false });
+  }
+}
+
+async function logout(req, res) {
+  try {
+    // Get the token to potentially revoke it
+    const token = getTokenFromCookie(req);
+    
+    // Try to revoke the token if it exists
+    if (token && token.access_token) {
+      try {
+        // Set credentials for revocation
+        oauth2Client.setCredentials({
+          ...token,
+          scope: typeof token.scope === 'string' ? token.scope : undefined
+        });
+        
+        // Revoke access token
+        await oauth2Client.revokeToken(token.access_token);
+        console.log('Token successfully revoked');
+      } catch (revokeError) {
+        // Continue with logout even if revocation fails
+        console.error('Error revoking token:', revokeError);
+      }
+    }
+    
+    // Use the same cookie settings format as setTokenCookie
+    const baseCookieSettings = `HttpOnly; Path=/; Max-Age=0`;
+    const cookieSettings = isProd
+      ? `${baseCookieSettings}; Secure; SameSite=Lax; Domain=${COOKIE_DOMAIN}`
+      : baseCookieSettings;
+    
+    res.setHeader('Set-Cookie', [`google_auth_token=; ${cookieSettings}`]);
+    console.log('User logged out successfully');
+    
+    return res.status(200).json({ 
+      authenticated: false, 
+      message: 'Logged out successfully' 
+    });
+  } catch (error) {
+    console.error('Error during logout:', error);
+    return res.status(500).json({ error: 'Logout process failed' });
   }
 }
 
@@ -266,11 +339,12 @@ Example response:
   }
 }
 
-// Helper functions for token management
-function getTokenFromCookie(req): TokenResponse | null {
+// Helper to extract token from cookie
+export function getTokenFromCookie(req): TokenResponse | null {
   try {
     const tokenCookie = req.cookies?.['google_auth_token'];
     if (!tokenCookie) return null;
+
     return JSON.parse(tokenCookie);
   } catch (error) {
     console.error('Error parsing token from cookie:', error);

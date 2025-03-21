@@ -3,14 +3,18 @@
 @tailwind utilities;
 
 body {
-  color: #fff;
-  background: #171717;
+  position: relative;
+  font-family: "Inter", sans-serif;
 }
-
 a {
   color: #3b82f6;
 }
 
 .main-container {
   margin: 0 auto;
+}
+
+.slick-track {
+  margin-left: 0 !important;
+  margin-right: auto !important;
 }

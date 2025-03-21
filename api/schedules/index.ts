@@ -1,26 +1,12 @@
 import { uuidv7 } from "uuidv7";
-import { CalendarSchedule } from '../types.js';
-import { TokenResponse } from '../index.js';
+import { CalendarSchedule, GOOGLE_OAUTH_PREFIX } from '../types.js';
+import { getTokenFromCookie, TokenResponse } from '../index.js';
 import { allowCors } from '../util.js';
 import jwt from 'jsonwebtoken';
 import { query } from '../db.js';
 
-const GOOGLE_OAUTH_PREFIX = 'google:';
 
-// Helper to extract token from cookie
-function getTokenFromCookie(req): TokenResponse | null {
-  try {
-    const tokenCookie = req.cookies?.['google_auth_token'];
-    if (!tokenCookie) return null;
-
-    return JSON.parse(tokenCookie);
-  } catch (error) {
-    console.error('Error parsing token from cookie:', error);
-    return null;
-  }
-}
-
-function getSubAndEmailFromToken(token) {
+export function getSubAndEmailFromToken(token) {
   if (token && token.id_token) {
     const decoded = jwt.decode(token.id_token);
     if (decoded && decoded.sub && decoded.email) {
