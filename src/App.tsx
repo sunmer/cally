@@ -57,6 +57,18 @@ function App() {
     speed: 500,
     slidesToShow: 3,
     slidesToScroll: 1,
+    responsive: [
+      {
+        breakpoint: 768, // mobile and below
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          centerMode: true,
+          centerPadding: '20px', // Adjust this to control how much of the next slide is shown
+        },
+      },
+    ],
+    className: "slider-spacing"
   };
 
   // Check for a pending schedule after OAuth redirect
@@ -206,9 +218,9 @@ function App() {
   const renderEvents = () => {
     if (!schedule || schedule.events.length === 0) return null;
     return (
-      <div className="mt-8 bg-white rounded-lg p-6">
-        <div className="flex items-center">
-          <h2 className="text-xl font-medium text-black">{schedule.title}</h2>
+      <div className="mt-8 bg-white rounded-lg">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+          <h2 className="text-xl font-medium text-black sm:text-center">{schedule.title}</h2>
           <button
             onClick={() => {
               if (!isAuthenticated) {
@@ -219,14 +231,20 @@ function App() {
               }
             }}
             disabled={localLoading}
-            className="ml-auto py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg text-gray-800 shadow-[0px_1px_2px_#a1e0b2] hover:bg-green-200 bg-green-100 disabled:opacity-50"
+            className="w-full md:w-auto mt-2 md:mt-0 py-3 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg text-gray-800 shadow-[0px_1px_2px_#a1e0b2] hover:bg-green-200 bg-green-100 disabled:opacity-50"
           >
-            Add to My Calendar
-            {localLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarCheck className="w-5 h-5" />}
+            <div className="flex items-center justify-center gap-2">
+              Add to My Calendar
+              {localLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CalendarCheck className="w-5 h-5" />
+              )}
+            </div>
           </button>
         </div>
 
-        <ul className="mt-4 space-y-4">
+        <ul className="mt-4 space-y-4 schedule">
           {schedule.events.map((event, index) => {
             const eventDate = new Date(event.start);
             const month = eventDate.toLocaleString('default', { month: 'short' });
@@ -243,10 +261,10 @@ function App() {
                       <div className="md:text-xl text-white">{startTime} - {endTime}</div>
                     </div>
                     <div className="p-4 font-normal text-gray-800 md:w-3/4">
-                      <h1 className="mb-4 text-3xl font-bold leading-none tracking-tight text-gray-800">
+                      <h1 className="mb-2 text-xl md:text-3xl font-bold leading-none tracking-tight text-gray-800">
                         {event.title}
                       </h1>
-                      <p className="text-gray-600">{event.description}</p>
+                      <p className="text-gray-600 truncate">{event.description}</p>
                     </div>
                   </div>
                 </div>
@@ -265,13 +283,14 @@ function App() {
         <Header />
         <div className="max-w-5xl mx-auto px-4 xl:px-0 pb-24 z-10">
 
-          <div className="flex flex-col p-8 mb-8">
+          <div className="flex flex-col px-0 sm:px-8 py-8 mb-8">
             <h1 className="font-semibold text-black text-5xl md:text-6xl">
               <span className="font-bold block">Calera</span>
             </h1>
-            <span className="text-4xl text-black">Anything instantly scheduled.</span>
-            <p className="mt-5 text-neutral-500 text-lg underline decoration-lime-500 decoration-3">
-              Calera turns any plan, goal, or idea into an AI-structured calendar schedule
+            <span className="text-4xl text-black">Your goals, instantly scheduled</span>
+            <p className="mt-5 text-neutral-500 md:text-lg underline decoration-lime-500 decoration-3">
+              Calera uses AI to automatically create structured schedules for any idea, goal or habit. <br />
+              Just choose what matters, and your calendar fills itself.
             </p>
           </div>
           <>
@@ -298,7 +317,7 @@ function App() {
                 My schedules
               </button>
             </nav>
-            <div className="flex flex-col bg-white shadow-md justify-start md:justify-center rounded-b-lg border overflow-x-scroll p-8">
+            <div className="flex flex-col bg-white shadow-md justify-start md:justify-center rounded-b-lg border overflow-x-scroll px-4 py-8 sm:px-8">
               {activeTab === 'create' && (
                 <div>
                   <form onSubmit={handleSubmit} className="w-full max-w-2xl">
@@ -313,10 +332,14 @@ function App() {
                       <button
                         type="submit"
                         disabled={localLoading || query.length < 6}
-                        className="py-3 px-4 inline-flex items-center gap-x-2 text-m font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50"
+                        className="w-full sm:max-w-[240px] py-3 px-4 inline-flex items-center gap-x-2 text-m font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 justify-between"
                       >
-                        {localLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Generate schedule"}
-                        <CalendarHeart className="w-5 h-5" />
+                        {localLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Generate schedule"
+                        )}
+                        <CalendarHeart className="w-5 h-5 ml-auto" />
                       </button>
                     </div>
                   </form>
@@ -342,34 +365,36 @@ function App() {
                           <li key={idx}>
                             <h3 className="text-xl font-medium text-black mb-2">{sch.title}</h3>
                             {sch.events && sch.events.length > 0 && (
-                              <Slider {...sliderSettings}>
-                                {sch.events.map((event, index) => {
-                                  const eventDate = new Date(event.start);
-                                  const month = eventDate.toLocaleString('default', { month: 'short' });
-                                  const day = eventDate.getDate();
-                                  const startTime = new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                  const endTime = new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                  return (
-                                    <div key={index} className="pr-4">
-                                      <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
-                                        <div className="flex flex-col w-full md:flex-row">
-                                          <div className="flex bg-red-500 flex-row justify-around p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-tl rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
-                                            <div className="md:text-2xl text-white">{month}</div>
-                                            <div className="md:text-5xl text-white">{day}</div>
-                                            <div className="md:text-xl text-white">{startTime} - {endTime}</div>
-                                          </div>
-                                          <div className="p-4 font-normal text-gray-800 md:w-3/4">
-                                            <h1 className="mb-4 text-3xl font-bold leading-none tracking-tight text-gray-800">
-                                              {event.title}
-                                            </h1>
-                                            <p className="text-gray-600">{event.description}</p>
+                              <div className="mb-12 mr-12">
+                                <Slider {...sliderSettings}>
+                                  {sch.events.map((event, index) => {
+                                    const eventDate = new Date(event.start);
+                                    const month = eventDate.toLocaleString('default', { month: 'short' });
+                                    const day = eventDate.getDate();
+                                    const startTime = new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                    const endTime = new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                    return (
+                                      <div key={index} className="mr-12">
+                                        <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
+                                          <div className="flex flex-col w-full md:flex-row">
+                                            <div className="flex bg-red-500 flex-row justify-around p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-tl rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
+                                              <div className="md:text-2xl text-white">{month}</div>
+                                              <div className="md:text-5xl text-white">{day}</div>
+                                              <div className="md:text-xl text-white">{startTime} - {endTime}</div>
+                                            </div>
+                                            <div className="p-4 font-normal text-gray-800 md:w-3/4">
+                                              <h1 className="mb-2 text-xl md:text-3xl font-bold leading-none tracking-tight text-gray-800">
+                                                {event.title}
+                                              </h1>
+                                              <p className="text-gray-600">{event.description}</p>
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  );
-                                })}
-                              </Slider>
+                                    );
+                                  })}
+                                </Slider>
+                              </div>
                             )}
                           </li>
                         ))}
