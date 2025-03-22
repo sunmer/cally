@@ -63,8 +63,8 @@ function App() {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
-          centerMode: true,
-          centerPadding: '20px', // Adjust this to control how much of the next slide is shown
+          arrows: true,
+          centerMode: false, // Don't use centerMode, we'll use CSS instead
         },
       },
     ],
@@ -304,14 +304,14 @@ function App() {
             >
               <button
                 type="button"
-                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'myschedules' ? '!bg-gray-100' : ''}`}
+                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'create' ? '' : '!bg-gray-200'}`}
                 onClick={() => setActiveTab('create')}
               >
                 Create schedule
               </button>
               <button
                 type="button"
-                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'create' ? '!bg-gray-100' : ''}`}
+                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'myschedules' ? '' : '!bg-gray-200'}`}
                 onClick={() => setActiveTab('myschedules')}
               >
                 My schedules
@@ -365,7 +365,7 @@ function App() {
                           <li key={idx}>
                             <h3 className="text-xl font-medium text-black mb-2">{sch.title}</h3>
                             {sch.events && sch.events.length > 0 && (
-                              <div className="mb-12 mr-12">
+                              <div className="mb-12">
                                 <Slider {...sliderSettings}>
                                   {sch.events.map((event, index) => {
                                     const eventDate = new Date(event.start);
@@ -374,7 +374,7 @@ function App() {
                                     const startTime = new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                                     const endTime = new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                                     return (
-                                      <div key={index} className="mr-12">
+                                      <div key={index}>
                                         <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
                                           <div className="flex flex-col w-full md:flex-row">
                                             <div className="flex bg-red-500 flex-row justify-around p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-tl rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">

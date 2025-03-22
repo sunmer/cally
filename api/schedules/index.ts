@@ -1,6 +1,6 @@
 import { uuidv7 } from "uuidv7";
 import { CalendarSchedule, GOOGLE_OAUTH_PREFIX } from '../types.js';
-import { getTokenFromCookie, TokenResponse } from '../index.js';
+import { getTokenFromCookie } from '../index.js';
 import { allowCors } from '../util.js';
 import jwt from 'jsonwebtoken';
 import { query } from '../db.js';

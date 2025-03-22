@@ -13,8 +13,16 @@ a {
 .main-container {
   margin: 0 auto;
 }
-
-.slick-track {
-  margin-left: 0 !important;
-  margin-right: auto !important;
+.slider-spacing .slick-slide {
+  padding-right: 10px;
+}
+@media (max-width: 768px) {
+  .slider-spacing .slick-track {
+    margin-left: 0;
+  }
+  
+  .slider-spacing .slick-list {
+    overflow: visible !important;
+    padding-right: 20% !important; /* This shows part of the next slide */
+  }
 }
