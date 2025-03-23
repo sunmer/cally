@@ -234,14 +234,19 @@ function App() {
               }
             }}
             disabled={localLoading}
-            className="w-full md:w-auto mt-2 md:mt-0 py-3 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg text-gray-800 shadow-[0px_1px_2px_#a1e0b2] hover:bg-green-200 bg-green-100 disabled:opacity-50"
+            className="w-full md:w-auto mt-2 md:mt-0 py-3 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg text-gray-800 shadow-[0px_1px_1px_#a1e0b2] hover:bg-green-200 bg-green-100 disabled:opacity-50"
           >
             <div className="flex items-center justify-center gap-2">
-              Add to My Calendar
               {localLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <>
+                  Adding to your calendar
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </>
               ) : (
-                <CalendarCheck className="w-5 h-5" />
+                <>
+                  Add to my calendar
+                  <CalendarCheck className="w-5 h-5" />
+                </>
               )}
             </div>
           </button>
@@ -335,16 +340,21 @@ function App() {
                       <button
                         type="submit"
                         disabled={localLoading || query.length < 6}
-                        className="w-full sm:max-w-[240px] py-3 px-4 flex items-center text-m font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50"
+                        className="sm:max-w-[240px] py-3 px-4 flex justify-center items-center text-m font-medium rounded-lg border border-transparent text-gray-800 shadow-[0px_1px_1px_#0f3078] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                       >
-                        <span className="flex-1 text-center">
+                        <div className="flex items-center justify-center gap-2">
                           {localLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                            <>
+                              Creating schedule
+                              <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                            </>
                           ) : (
-                            "Create schedule"
+                            <>
+                              Create schedule
+                              <CalendarHeart className="w-5 h-5 ml-auto" />
+                            </>
                           )}
-                        </span>
-                        <CalendarHeart className="w-5 h-5 ml-auto" />
+                        </div>
                       </button>
 
                     </div>

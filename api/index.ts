@@ -28,7 +28,13 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 // Define Google Calendar API scopes
-const SCOPES = ['openid', 'email', 'https://www.googleapis.com/auth/calendar'];
+const SCOPES = [
+  'openid',
+  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/calendar.freebusy',
+  'https://www.googleapis.com/auth/calendar.events'
+];
 
 async function handler(req, res) {
   const { type } = req.query; // Extract query parameter
