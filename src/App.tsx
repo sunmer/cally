@@ -9,6 +9,7 @@ import Header from './components/Header';
 import { useAuth } from './AuthContext';
 import IconBook from "./assets/icon-book.svg?react";
 import IconMeditate from "./assets/icon-meditate.svg?react";
+import IconWater from "./assets/icon-water.svg?react";
 
 type CalendarEventItem = {
   title: string;
@@ -355,19 +356,26 @@ function App() {
                   )}
 
                   <div className="my-8">
-                    <a 
-                      className="cursor-pointer mr-2 inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                    <a
+                      className=" mr-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                       onClick={() => setQuery('Read 15 mins every day')}
-                      >
-                      Read 15 mins every day
+                    >
                       <IconBook className="" />
+                      Read 15 mins every day
                     </a>
-                    <a 
+                    <a
+                      className="mr-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      onClick={() => setQuery('Learn to meditate in 14 days')}
+                    >
+                      <IconMeditate className="" />
+                      Start meditating: a 14-day journey
+                    </a>
+                    <a
                       className="cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                       onClick={() => setQuery('Learn to meditate in 14 days')}
-                      >
-                      Start meditating — a 14-day journey
-                      <IconMeditate className="" />
+                    >
+                      <IconWater className="" />
+                      Hydration challenge: drink water 4x daily for 7 days
                     </a>
                   </div>
 
