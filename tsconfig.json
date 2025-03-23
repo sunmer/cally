@@ -8,7 +8,7 @@
     "noImplicitAny": false,
     "useUnknownInCatchVariables": false,
     "allowSyntheticDefaultImports": true,
-
+    "types": ["vite/client"],
     /* Bundler mode */
     "moduleResolution": "node",
     "esModuleInterop": true,

@@ -7,6 +7,8 @@ import Settings from './Settings';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import { useAuth } from './AuthContext';
+import IconBook from "./assets/icon-book.svg?react";
+import IconMeditate from "./assets/icon-meditate.svg?react";
 
 type CalendarEventItem = {
   title: string;
@@ -304,14 +306,14 @@ function App() {
             >
               <button
                 type="button"
-                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'create' ? '' : '!bg-gray-200'}`}
+                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'create' ? 'bg-gray-100' : ''}`}
                 onClick={() => setActiveTab('create')}
               >
-                Create schedule
+                Create a schedule
               </button>
               <button
                 type="button"
-                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'myschedules' ? '' : '!bg-gray-200'}`}
+                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'myschedules' ? 'bg-gray-100' : ''}`}
                 onClick={() => setActiveTab('myschedules')}
               >
                 My schedules
@@ -332,15 +334,18 @@ function App() {
                       <button
                         type="submit"
                         disabled={localLoading || query.length < 6}
-                        className="w-full sm:max-w-[240px] py-3 px-4 inline-flex items-center gap-x-2 text-m font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 justify-between"
+                        className="w-full sm:max-w-[240px] py-3 px-4 flex items-center text-m font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50"
                       >
-                        {localLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          "Generate schedule"
-                        )}
+                        <span className="flex-1 text-center">
+                          {localLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                          ) : (
+                            "Create schedule"
+                          )}
+                        </span>
                         <CalendarHeart className="w-5 h-5 ml-auto" />
                       </button>
+
                     </div>
                   </form>
                   {error && (
@@ -348,6 +353,23 @@ function App() {
                       {error}
                     </div>
                   )}
+
+                  <div className="my-8">
+                    <a 
+                      className="cursor-pointer mr-2 inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      onClick={() => setQuery('Read 15 mins every day')}
+                      >
+                      Read 15 mins every day
+                      <IconBook className="" />
+                    </a>
+                    <a 
+                      className="cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      onClick={() => setQuery('Learn to meditate in 14 days')}
+                      >
+                      Start meditating — a 14-day journey
+                      <IconMeditate className="" />
+                    </a>
+                  </div>
 
                   {renderEvents()}
                 </div>
