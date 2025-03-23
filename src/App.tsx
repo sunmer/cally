@@ -36,11 +36,6 @@ type SuggestResponse = {
   }[];
 };
 
-type CalendarAddResponse = {
-  success: boolean;
-  events: any[];
-};
-
 function App() {
   const [schedule, setSchedule] = useState<CalendarSchedule | null>(null);
   const [error, setError] = useState<string | null>(null);
