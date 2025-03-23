@@ -1,3 +1,34 @@
+import jwt from 'jsonwebtoken';
+import { GoogleTokenResponse } from './types';
+
+export function getSubAndEmailFromToken(token) {
+  if (token && token.id_token) {
+    const decoded = jwt.decode(token.id_token);
+    if (decoded && decoded.sub && decoded.email) {
+      return { sub: decoded.sub, email: decoded.email };
+    } else {
+      console.error('Failed to extract sub from decoded id_token:', decoded);
+      return null;
+    }
+  } else {
+    console.error('id_token not found in token');
+    return null;
+  }
+}
+
+// Helper to extract token from cookie
+export function getGoogleTokenFromCookie(req): GoogleTokenResponse | null {
+  try {
+    const tokenCookie = req.cookies?.['google_auth_token'];
+    if (!tokenCookie) return null;
+
+    return JSON.parse(tokenCookie);
+  } catch (error) {
+    console.error('Error parsing token from cookie:', error);
+    return null;
+  }
+}
+
 export const allowCors = fn => async (req, res) => {
   const allowedOrigins = [
     'http://localhost:5173',

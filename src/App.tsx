@@ -10,6 +10,7 @@ import { useAuth } from './AuthContext';
 import IconBook from "./assets/icon-book.svg?react";
 import IconMeditate from "./assets/icon-meditate.svg?react";
 import IconWater from "./assets/icon-water.svg?react";
+import IconPrompt from "./assets/icon-prompt.svg?react";
 
 type CalendarEventItem = {
   title: string;
@@ -40,9 +41,13 @@ type CalendarAddResponse = {
 
 function App() {
   const [schedule, setSchedule] = useState<CalendarSchedule | null>(null);
-  const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+
+  // Separate loading states for different actions
+  const [createScheduleLoading, setCreateScheduleLoading] = useState(false);
+  const [addToCalendarLoading, setAddToCalendarLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
   // Tab toggling and schedules fetching
   const [activeTab, setActiveTab] = useState<'create' | 'myschedules'>('create');
@@ -51,7 +56,7 @@ function App() {
   const [schedulesError, setSchedulesError] = useState<string | null>(null);
 
   // Use the AuthContext instead of local isAuthenticated state
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // Slider settings for React Slick
   const sliderSettings = {
@@ -120,9 +125,9 @@ function App() {
 
   // Redirects for authentication
   const handleAuth = async () => {
-    setLocalLoading(true);
+    setAuthLoading(true);
     try {
-      const res = await fetch(`${Settings.API_URL}?type=google/auth`, {
+      const res = await fetch(`${Settings.API_URL}/google?type=auth`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -137,7 +142,7 @@ function App() {
       setError(err.message);
       console.error("Authentication error:", err);
     } finally {
-      setLocalLoading(false);
+      setAuthLoading(false);
     }
   };
 
@@ -145,10 +150,10 @@ function App() {
     e.preventDefault();
     if (query.length < 6) return;
 
-    setLocalLoading(true);
+    setCreateScheduleLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${Settings.API_URL}?type=google/calendar-suggest`, {
+      const res = await fetch(`${Settings.API_URL}/suggest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: query })
@@ -163,31 +168,17 @@ function App() {
       setError(err.message);
       console.error("Error fetching events:", err);
     } finally {
-      setLocalLoading(false);
+      setCreateScheduleLoading(false);
     }
   };
 
   const addToCalendar = async (currentSchedule = schedule) => {
     if (!currentSchedule) return;
 
-    setLocalLoading(true);
+    setAddToCalendarLoading(true);
     try {
-      // First, verify auth is still valid
-      const authCheckResponse = await fetch(`${Settings.API_URL}?type=google/auth-check`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-
-      if (!authCheckResponse.ok) {
-        // If auth check fails, store pending schedule and trigger login
-        localStorage.setItem("pendingSchedule", JSON.stringify(currentSchedule));
-        login();
-        return;
-      }
-
       // Continue with calendar add
-      const calendarAddResponse = await fetch(`${Settings.API_URL}?type=google/calendar-add`, {
+      const calendarAddResponse = await fetch(`${Settings.API_URL}/google?type=calendar-add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(currentSchedule),
@@ -214,7 +205,7 @@ function App() {
       setError(err.message);
       console.error("Error adding events to calendar:", err);
     } finally {
-      setLocalLoading(false);
+      setAddToCalendarLoading(false);
     }
   };
 
@@ -233,13 +224,18 @@ function App() {
                 addToCalendar();
               }
             }}
-            disabled={localLoading}
+            disabled={addToCalendarLoading || authLoading}
             className="w-full md:w-auto mt-2 md:mt-0 py-3 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg text-gray-800 shadow-[0px_1px_1px_#a1e0b2] hover:bg-green-200 bg-green-100 disabled:opacity-50"
           >
             <div className="flex items-center justify-center gap-2">
-              {localLoading ? (
+              {addToCalendarLoading ? (
                 <>
                   Adding to your calendar
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </>
+              ) : authLoading ? (
+                <>
+                  Authenticating
                   <Loader2 className="w-4 h-4 animate-spin" />
                 </>
               ) : (
@@ -297,8 +293,7 @@ function App() {
             </h1>
             <span className="text-4xl text-black">Your goals, instantly scheduled</span>
             <p className="mt-5 text-neutral-500 md:text-lg underline decoration-lime-500 decoration-3">
-              Calera uses AI to automatically create structured schedules for any idea, goal or habit. <br />
-              Just choose what matters, and your calendar fills itself.
+              Calera uses AI to turn personal goals into schedules aligned with your calendar
             </p>
           </div>
           <>
@@ -312,14 +307,14 @@ function App() {
             >
               <button
                 type="button"
-                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'create' ? 'bg-gray-100' : ''}`}
+                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'create' ? '' : 'bg-gray-100'}`}
                 onClick={() => setActiveTab('create')}
               >
                 Create a schedule
               </button>
               <button
                 type="button"
-                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'myschedules' ? 'bg-gray-100' : ''}`}
+                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'myschedules' ? '' : 'bg-gray-100'}`}
                 onClick={() => setActiveTab('myschedules')}
               >
                 My schedules
@@ -339,11 +334,11 @@ function App() {
                       />
                       <button
                         type="submit"
-                        disabled={localLoading || query.length < 6}
+                        disabled={createScheduleLoading || query.length < 6}
                         className="sm:max-w-[240px] py-3 px-4 flex justify-center items-center text-m font-medium rounded-lg border border-transparent text-gray-800 shadow-[0px_1px_1px_#0f3078] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                       >
                         <div className="flex items-center justify-center gap-2">
-                          {localLoading ? (
+                          {createScheduleLoading ? (
                             <>
                               Creating schedule
                               <Loader2 className="w-4 h-4 animate-spin mx-auto" />
@@ -365,27 +360,35 @@ function App() {
                     </div>
                   )}
 
-                  <div className="my-8">
+                  <div className="my-12">
+                    <h2 className="text-gray-600 font-semibold text-2xl md:leading-tight mb-4">Templates</h2>
                     <a
-                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                       onClick={() => setQuery('Read 15 mins every day')}
                     >
                       <IconBook className="" />
                       Read 15 mins every day
                     </a>
                     <a
-                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                       onClick={() => setQuery('Learn to meditate in 14 days')}
                     >
                       <IconMeditate className="" />
                       Start meditating: a 14-day journey
                     </a>
                     <a
-                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                       onClick={() => setQuery('Drink water 4x daily for 7 days')}
                     >
                       <IconWater className="" />
                       Hydration challenge: drink water 4x daily for 7 days
+                    </a>
+                    <a
+                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      onClick={() => setQuery('AI fundamentals: Learn AI prompting in 7 days')}
+                    >
+                      <IconPrompt className="" />
+                      AI fundamentals: Learn AI prompting in 7 days
                     </a>
                   </div>
 

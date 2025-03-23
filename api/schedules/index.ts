@@ -1,25 +1,9 @@
 import { uuidv7 } from "uuidv7";
 import { CalendarSchedule, GOOGLE_OAUTH_PREFIX } from '../types.js';
-import { getTokenFromCookie } from '../index.js';
-import { allowCors } from '../util.js';
-import jwt from 'jsonwebtoken';
+import { getGoogleTokenFromCookie } from '../util.js';
+import { allowCors, getSubAndEmailFromToken } from '../util.js';
 import { query } from '../db.js';
 
-
-export function getSubAndEmailFromToken(token) {
-  if (token && token.id_token) {
-    const decoded = jwt.decode(token.id_token);
-    if (decoded && decoded.sub && decoded.email) {
-      return { sub: decoded.sub, email: decoded.email };
-    } else {
-      console.error('Failed to extract sub from decoded id_token:', decoded);
-      return null;
-    }
-  } else {
-    console.error('id_token not found in token');
-    return null;
-  }
-}
 
 async function handler(req, res) {
   if (req.method === 'POST') {
@@ -42,7 +26,7 @@ const createEvents = async (req, res) => {
     }
 
     // Extract the token from the cookie and then the sub from the token
-    const token = getTokenFromCookie(req);
+    const token = getGoogleTokenFromCookie(req);
     if (!token) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
@@ -90,7 +74,7 @@ const createEvents = async (req, res) => {
 const getEvents = async (req, res) => {
   try {
     // Extract the token from the cookie and then the sub from the token
-    const token = getTokenFromCookie(req);
+    const token = getGoogleTokenFromCookie(req);
     if (!token) {
       return res.status(401).json({ error: 'User not authenticated' });
     }

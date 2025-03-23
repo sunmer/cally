@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch(`${Settings.API_URL}?type=google/auth-check`, {
+        const res = await fetch(`${Settings.API_URL}/google?type=auth-check`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${Settings.API_URL}?type=google/auth`, {
+      const res = await fetch(`${Settings.API_URL}/google?type=auth`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${Settings.API_URL}?type=google/logout`, {
+      const res = await fetch(`${Settings.API_URL}/google?type=logout`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'

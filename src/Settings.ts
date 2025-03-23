@@ -1,5 +1,5 @@
 const SETTINGS_PROD = {
-  WEB_URL: "https://cally-chi.vercel.app/",
+  WEB_URL: "https://cally-chi.vercel.app",
   API_URL: "https://cally-chi.vercel.app/api"
 };
 
