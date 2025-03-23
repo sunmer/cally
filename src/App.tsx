@@ -258,9 +258,9 @@ function App() {
               <div key={index} className="mb-4">
                 <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
                   <div className="flex flex-col w-full md:flex-row">
-                    <div className="flex bg-red-500 flex-row justify-around p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-tl rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
-                      <div className="md:text-2xl text-white">{month}</div>
-                      <div className="md:text-5xl text-white">{day}</div>
+                    <div className="flex bg-red-500 flex-row justify-start p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-t md:rounded-t-none md:rounded-tl md:rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
+                      <div className="md:text-2xl text-white mr-2 md:mr-0">{month}</div>
+                      <div className="md:text-5xl text-white mr-2 md:mr-0">{day}</div>
                       <div className="md:text-xl text-white">{startTime} - {endTime}</div>
                     </div>
                     <div className="p-4 font-normal text-gray-800 md:w-3/4">
@@ -357,22 +357,22 @@ function App() {
 
                   <div className="my-8">
                     <a
-                      className=" mr-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                       onClick={() => setQuery('Read 15 mins every day')}
                     >
                       <IconBook className="" />
                       Read 15 mins every day
                     </a>
                     <a
-                      className="mr-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                       onClick={() => setQuery('Learn to meditate in 14 days')}
                     >
                       <IconMeditate className="" />
                       Start meditating: a 14-day journey
                     </a>
                     <a
-                      className="cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
-                      onClick={() => setQuery('Learn to meditate in 14 days')}
+                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      onClick={() => setQuery('Drink water 4x daily for 7 days')}
                     >
                       <IconWater className="" />
                       Hydration challenge: drink water 4x daily for 7 days
@@ -407,9 +407,9 @@ function App() {
                                       <div key={index}>
                                         <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
                                           <div className="flex flex-col w-full md:flex-row">
-                                            <div className="flex bg-red-500 flex-row justify-around p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-tl rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
-                                              <div className="md:text-2xl text-white">{month}</div>
-                                              <div className="md:text-5xl text-white">{day}</div>
+                                            <div className="flex bg-red-500 flex-row justify-start p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-t md:rounded-none md:rounded-tl md:rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
+                                              <div className="md:text-2xl text-white mr-2 md:mr-0">{month}</div>
+                                              <div className="md:text-5xl text-white mr-2 md:mr-0">{day}</div>
                                               <div className="md:text-xl text-white">{startTime} - {endTime}</div>
                                             </div>
                                             <div className="p-4 font-normal text-gray-800 md:w-3/4">
