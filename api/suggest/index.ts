@@ -37,6 +37,7 @@ Important scheduling rules:
 2. Events must have different start and end times
 3. If a specific date is not provided, use ${isoTomorrow} as the base date
 4. For multiple events, ensure they don't overlap and have reasonable spacing between them
+5. If ${text} needs educational content, write out some contents but also rely on external materials if needed. Be practical and action-oriented.
 
 Example response:
 {
@@ -70,7 +71,7 @@ Example response:
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-2024-08-06",
+        model: "gpt-4o-mini-2024-07-18",
         messages: messages,
         stream: false,
         response_format: { "type": "json_object" },

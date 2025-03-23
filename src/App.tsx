@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Slider from "react-slick";
+import { toast, ToastContainer } from 'react-toastify';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { CalendarCheck, CalendarHeart, Loader2 } from "lucide-react";
@@ -11,6 +12,7 @@ import IconBook from "./assets/icon-book.svg?react";
 import IconMeditate from "./assets/icon-meditate.svg?react";
 import IconWater from "./assets/icon-water.svg?react";
 import IconPrompt from "./assets/icon-prompt.svg?react";
+import IconFoodPrep from "./assets/icon-foodprep.svg?react";
 
 type CalendarEventItem = {
   title: string;
@@ -78,7 +80,6 @@ function App() {
     ],
     className: "slider-spacing"
   };
-
   // Check for a pending schedule after OAuth redirect
   useEffect(() => {
     if (isAuthenticated && !schedule) {
@@ -87,10 +88,7 @@ function App() {
         const scheduleFromStorage = JSON.parse(storedSchedule);
         setSchedule(scheduleFromStorage);
 
-        // Add a slight delay to ensure cookies are properly set
-        setTimeout(() => {
-          addToCalendar(scheduleFromStorage);
-        }, 500);
+        addToCalendar(scheduleFromStorage);
 
         localStorage.removeItem("pendingSchedule");
       }
@@ -188,19 +186,15 @@ function App() {
       if (!calendarAddResponse.ok)
         throw new Error('Failed to add events to calendar');
 
-      const result: CalendarAddResponse = await calendarAddResponse.json();
-      console.log(result);
-
       //Create events in Calera DB
-      const createEventsResponse = await fetch(`${Settings.API_URL}/schedules`, {
+      await fetch(`${Settings.API_URL}/schedules`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(currentSchedule)
       });
 
-      console.log(createEventsResponse);
-      alert('Events successfully added to your calendar!');
+      toast(`${currentSchedule.title} was successfully added to your calendar!`)
     } catch (err) {
       setError(err.message);
       console.error("Error adding events to calendar:", err);
@@ -225,7 +219,7 @@ function App() {
               }
             }}
             disabled={addToCalendarLoading || authLoading}
-            className="w-full md:w-auto mt-2 md:mt-0 py-3 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg text-gray-800 shadow-[0px_1px_1px_#a1e0b2] hover:bg-green-200 bg-green-100 disabled:opacity-50"
+            className="w-full md:w-auto mt-2 md:mt-0 py-3 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg text-gray-800 shadow-[0px_1px_1px_#a1e0b2] bg-green-200 hover:bg-green-300 disabled:opacity-50"
           >
             <div className="flex items-center justify-center gap-2">
               {addToCalendarLoading ? (
@@ -282,6 +276,8 @@ function App() {
 
   return (
     <main id="content">
+      <ToastContainer />
+      
       <div className="min-h-screen relative">
         <div className="absolute w-full h-full bg-gradient-to-bl from-[#ffe4e6] to-[#ccfbf1] z-[-1]"></div>
         <Header />
@@ -307,14 +303,14 @@ function App() {
             >
               <button
                 type="button"
-                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'create' ? '' : 'bg-gray-100'}`}
+                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 ${activeTab === 'create' ? '' : 'bg-gray-200'}`}
                 onClick={() => setActiveTab('create')}
               >
                 Create a schedule
               </button>
               <button
                 type="button"
-                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none ${activeTab === 'myschedules' ? '' : 'bg-gray-100'}`}
+                className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 ${activeTab === 'myschedules' ? '' : 'bg-gray-200'}`}
                 onClick={() => setActiveTab('myschedules')}
               >
                 My schedules
@@ -361,7 +357,7 @@ function App() {
                   )}
 
                   <div className="my-12">
-                    <h2 className="text-gray-600 font-semibold text-2xl md:leading-tight mb-4">Templates</h2>
+                    <h2 className="text-gray-600 font-semibold text-2xl md:leading-tight mb-4">Ideas for goals</h2>
                     <a
                       className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                       onClick={() => setQuery('Read 15 mins every day')}
@@ -375,6 +371,13 @@ function App() {
                     >
                       <IconMeditate className="" />
                       Start meditating: a 14-day journey
+                    </a>
+                    <a
+                      className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                      onClick={() => setQuery('4-week meal prep challenge with a simple, beginner-friendly recipe for each Sunday')}
+                    >
+                      <IconFoodPrep className="" />
+                      4-week Sunday meal prep challenge
                     </a>
                     <a
                       className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
