@@ -5,10 +5,10 @@ import { google } from 'googleapis';
 const isProd = process.env.VERCEL_ENV === 'production';
 
 const WEB_URL = isProd ?
-  `https://cally-chi.vercel.app/` :
+  `https://calera.io/` :
   `http://localhost:5173/`;
 
-const COOKIE_DOMAIN = '.cally-chi.vercel.app';
+const COOKIE_DOMAIN = '.calera.io';
 
 // Google OAuth configuration
 const oauth2Client = new google.auth.OAuth2(

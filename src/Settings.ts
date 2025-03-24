@@ -1,6 +1,6 @@
 const SETTINGS_PROD = {
-  WEB_URL: "https://cally-chi.vercel.app",
-  API_URL: "https://cally-chi.vercel.app/api"
+  WEB_URL: "https://calera.io",
+  API_URL: "https://calera.io/api"
 };
 
 const SETTINGS_DEV = {
