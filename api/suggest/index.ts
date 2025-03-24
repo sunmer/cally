@@ -37,7 +37,11 @@ Important scheduling rules:
 2. Events must have different start and end times
 3. If a specific date is not provided, use ${isoTomorrow} as the base date
 4. For multiple events, ensure they don't overlap and have reasonable spacing between them
-5. If ${text} needs educational content, write out some contents but also rely on external materials if needed. Be practical and action-oriented.
+6. If the user's request includes a recurring or multi-day challenge (e.g., "for 7 days", "every day", "4-week", "14-day journey"):
+   - Generate separate event entries for each instance, based on the frequency and duration mentioned
+   - Spread events across the appropriate days with realistic spacing and times
+
+7. If ${text} needs educational content, write out some contents but also rely on external materials if needed. Be practical and action-oriented.
 
 Example response:
 {
