@@ -1,6 +1,6 @@
 const SETTINGS_PROD = {
-  WEB_URL: "https://calera.io",
-  API_URL: "https://calera.io/api"
+  WEB_URL: "https://www.calera.io",
+  API_URL: "https://www.calera.io/api"
 };
 
 const SETTINGS_DEV = {
