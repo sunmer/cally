@@ -10,6 +10,7 @@ export type CalendarEventItem = {
 export type CalendarSchedule = {
   title: string;
   events: CalendarEventItem[];
+  requiresAdditionalContent: boolean
 };
 
 export type GoogleCalendarEvent = {
