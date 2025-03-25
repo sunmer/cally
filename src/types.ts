@@ -1,12 +1,12 @@
-export type CalendarEventItem = {
+export type ScheduleEvent = {
   title: string;
   description: string;
   start: string;
   end: string;
 };
 
-export type CalendarSchedule = {
+export type Schedule = {
   title: string;
-  events: CalendarEventItem[];
+  events: ScheduleEvent[];
   requiresAdditionalContent: boolean
 };

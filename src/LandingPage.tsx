@@ -12,7 +12,7 @@ import IconWater from "./assets/icon-water.svg?react";
 import IconPrompt from "./assets/icon-prompt.svg?react";
 import IconFoodPrep from "./assets/icon-foodprep.svg?react";
 import SuggestedSchedule from './SuggestedSchedule';
-import { CalendarSchedule } from './types';
+import { Schedule } from './types';
 
 
 type AuthUrlResponse = {
@@ -26,7 +26,7 @@ type SuggestResponse = {
 };
 
 function LandingPage() {
-  const [schedule, setSchedule] = useState<CalendarSchedule | null>(null);
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
@@ -37,7 +37,7 @@ function LandingPage() {
 
   // Tab toggling and schedules fetching
   const [activeTab, setActiveTab] = useState<'create' | 'myschedules'>('create');
-  const [mySchedules, setMySchedules] = useState<CalendarSchedule[]>([]);
+  const [mySchedules, setMySchedules] = useState<Schedule[]>([]);
   const [schedulesLoading, setSchedulesLoading] = useState(false);
   const [schedulesError, setSchedulesError] = useState<string | null>(null);
 
@@ -143,7 +143,7 @@ function LandingPage() {
       if (!res.ok) throw new Error('Failed to get events');
 
       const data: SuggestResponse = await res.json();
-      const scheduleData: CalendarSchedule = JSON.parse(data.choices[0].message.content);
+      const scheduleData: Schedule = JSON.parse(data.choices[0].message.content);
 
       setSchedule(scheduleData);
     } catch (err: any) {

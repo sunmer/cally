@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { CalendarCheck, Loader2 } from "lucide-react";
-import { CalendarEventItem, CalendarSchedule } from './types';
+import { ScheduleEvent, Schedule } from './types';
 import ScheduleItem from './components/ModalScheduleEvent';
 
 type SuggestedScheduleProps = {
-  schedule: CalendarSchedule | null;
+  schedule: Schedule | null;
   addToCalendarLoading: boolean;
   authLoading: boolean;
   isAuthenticated: boolean;
@@ -23,11 +23,11 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
   if (!schedule || schedule.events.length === 0) return null;
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEventItem | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
 
   const openModalWithEvent = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    clickedEvent: CalendarEventItem
+    clickedEvent: ScheduleEvent
   ) => {
     e.preventDefault();
     setSelectedEvent(clickedEvent);

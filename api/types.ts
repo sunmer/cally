@@ -1,19 +1,19 @@
 export const GOOGLE_OAUTH_PREFIX = 'google:';
 
-export type CalendarEventItem = {
+export type ScheduleEvent = {
   title: string;
   description: string;
   start: string;
   end: string;
 };
 
-export type CalendarSchedule = {
+export type Schedule = {
   title: string;
-  events: CalendarEventItem[];
+  events: ScheduleEvent[];
   requiresAdditionalContent: boolean
 };
 
-export type GoogleCalendarEvent = {
+export type ScheduleToGoogleAPI = {
   summary: string;
   description: string;
   start: {

@@ -1,14 +1,14 @@
 // components/ScheduleItem.tsx
 import React, { useEffect, useState } from 'react';
 import { Loader2 } from "lucide-react";
-import { CalendarEventItem } from '../types';
+import { ScheduleEvent } from '../types';
 import Settings from '../Settings';
 import ReactMarkdown from 'react-markdown';
 
 type ModalScheduleEventProps = {
   isOpened: boolean;
   onClose: () => void;
-  event: CalendarEventItem | null;
+  event: ScheduleEvent | null;
 };
 
 const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({

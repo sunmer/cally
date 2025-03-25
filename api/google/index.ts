@@ -1,4 +1,4 @@
-import { CalendarSchedule, GoogleCalendarEvent, GoogleTokenResponse } from "../types.js";
+import { Schedule, ScheduleToGoogleAPI, GoogleTokenResponse } from "../types.js";
 import { allowCors, getGoogleTokenFromCookie } from "../util.js";
 import { google } from 'googleapis';
 
@@ -164,7 +164,7 @@ async function handleAuthCallback(req, res) {
 async function addToCalendar(req, res) {
   try {
     // Expecting the request body to match the new CalendarSchedule type
-    const schedule = req.body as CalendarSchedule;
+    const schedule = req.body as Schedule;
 
     if (!schedule || !Array.isArray(schedule.events)) {
       return res.status(400).json({ error: 'Calendar schedule with events array is required' });
@@ -185,7 +185,7 @@ async function addToCalendar(req, res) {
     const results: any[] = [];
 
     for (const event of schedule.events) {
-      const calendarEvent: GoogleCalendarEvent = {
+      const calendarEvent: ScheduleToGoogleAPI = {
         summary: event.title,
         description: event.description,
         start: {
