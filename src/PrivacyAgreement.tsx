@@ -1,6 +1,6 @@
 const PrivacyAgreement: React.FC = () => {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden relative bg-white">
       <div className="max-w-[85rem] min-h-[40rem] mx-auto px-4 sm:px-6 lg:px-8 text-left">
         <div className="text-white">
           <div className="space-y-4 text-gray-800 dark:text-white">

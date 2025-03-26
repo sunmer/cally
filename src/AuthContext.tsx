@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (res.ok) {
           const data = await res.json();
+
           setIsAuthenticated(data.authenticated);
           if (data.authenticated && data.user) {
             setUser(data.user);
@@ -99,7 +100,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       setIsAuthenticated(false);
       setUser(null);
+      localStorage.clear();
+      sessionStorage.clear();
       window.location.reload();
+      
     } catch (err: any) {
       setError('Logout failed, please try again.');
       console.error("Error logging out:", err);

@@ -13,6 +13,7 @@ import IconPrompt from "./assets/icon-prompt.svg?react";
 import IconFoodPrep from "./assets/icon-foodprep.svg?react";
 import SuggestedSchedule from './SuggestedSchedule';
 import { Schedule } from './types';
+import ModalCreateAccount from './components/ModalCreateAccount';
 
 
 type AuthUrlResponse = {
@@ -35,7 +36,7 @@ function LandingPage() {
   const [addToCalendarLoading, setAddToCalendarLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Tab toggling and schedules fetching
+  const [isModalCreateAccountOpen, setIsModalCreateAccountOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'create' | 'myschedules'>('create');
   const [mySchedules, setMySchedules] = useState<Schedule[]>([]);
   const [schedulesLoading, setSchedulesLoading] = useState(false);
@@ -82,26 +83,34 @@ function LandingPage() {
   // When My Schedules tab is active, fetch schedules from API
   useEffect(() => {
     if (activeTab === 'myschedules') {
-      const fetchEvents = async () => {
-        setSchedulesLoading(true);
-        setSchedulesError(null);
-        try {
-          const response = await fetch(`${Settings.API_URL}/schedules`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-          });
-          if (!response.ok) throw new Error('Failed to fetch events');
-          const data = await response.json();
-          setMySchedules(data);
-        } catch (err: any) {
-          setSchedulesError(err.message);
-        } finally {
-          setSchedulesLoading(false);
-        }
-      };
+      if (!isAuthenticated) {
+        setIsModalCreateAccountOpen(true);
+      } else {
+        const fetchEvents = async () => {
+          setSchedulesLoading(true);
+          setSchedulesError(null);
+          try {
+            const response = await fetch(`${Settings.API_URL}/schedules`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include'
+            });
 
-      fetchEvents();
+            if (!response.ok) {
+
+            }
+
+            const data = await response.json();
+            setMySchedules(data);
+          } catch (err: any) {
+            setSchedulesError(err.message);
+          } finally {
+            setSchedulesLoading(false);
+          }
+        };
+
+        fetchEvents();
+      }
     }
   }, [activeTab]);
 
@@ -189,15 +198,16 @@ function LandingPage() {
 
 
   return (
-
-    <div className="max-w-5xl mx-auto px-4 xl:px-0 pb-24 z-10">
+    <div className="max-w-5xl mx-auto px-4 xl:px-0 pb-24 z-10 relative">
 
       <div className="flex flex-col px-0 sm:px-8 py-8 mb-8">
-        <h1 className="font-semibold text-black text-5xl md:text-6xl">
+        <h1 className="font-semibold text-5xl md:text-6xl bg-clip-text bg-gradient-to-r from-green-500 to-cyan-500 text-transparent">
           <span className="font-bold block">Calera</span>
         </h1>
+
+
         <span className="text-4xl text-black">Your goals, instantly scheduled</span>
-        <p className="mt-5 text-neutral-500 md:text-lg underline decoration-lime-500 decoration-3">
+        <p className="mt-5 text-neutral-500 md:text-lg underline decoration-teal-500 decoration-3">
           Calera uses AI to turn personal goals into schedules aligned with your calendar
         </p>
       </div>
@@ -211,14 +221,14 @@ function LandingPage() {
         >
           <button
             type="button"
-            className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'create' ? '!bg-gray-100' : ''}`}
+            className={`flex-1 py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'create' ? 'bg-gray-100' : 'bg-white'}`}
             onClick={() => setActiveTab('create')}
           >
             Create a schedule
           </button>
           <button
             type="button"
-            className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'myschedules' ? '!bg-gray-100' : ''}`}
+            className={`flex-1 py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'myschedules' ? 'bg-gray-100' : 'bg-white'}`}
             onClick={() => setActiveTab('myschedules')}
           >
             My schedules
@@ -238,8 +248,8 @@ function LandingPage() {
                   />
                   <button
                     type="submit"
+                    className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
                     disabled={createScheduleLoading || query.length < 6}
-                    className="sm:max-w-[240px] py-3 px-4 flex justify-center items-center text-m font-medium rounded-lg border border-transparent text-gray-800 shadow-[0px_1px_1px_#0f3078] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                   >
                     <div className="flex items-center justify-center gap-2">
                       {createScheduleLoading ? (
@@ -256,6 +266,7 @@ function LandingPage() {
                     </div>
                   </button>
 
+
                 </div>
               </form>
               {error && (
@@ -267,35 +278,35 @@ function LandingPage() {
               <div className="my-12">
                 <h2 className="text-gray-600 font-semibold text-2xl md:leading-tight mb-4">Ideas for goals</h2>
                 <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Read 15 mins every day for 7 days')}
                 >
                   <IconBook className="" />
                   Read 15 mins every day for a week
                 </a>
                 <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Learn to meditate in 14 days')}
                 >
                   <IconMeditate className="" />
                   Start meditating: a 14-day journey
                 </a>
                 <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('4-week meal prep challenge with a simple, beginner-friendly recipe for each Sunday')}
                 >
                   <IconFoodPrep className="" />
                   4-week Sunday meal prep challenge
                 </a>
                 <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Drink water 4x daily for 7 days')}
                 >
                   <IconWater className="" />
                   Hydration challenge: drink water 4x daily for 7 days
                 </a>
                 <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('AI fundamentals: Learn AI prompting in 7 days')}
                 >
                   <IconPrompt className="" />
@@ -303,10 +314,10 @@ function LandingPage() {
                 </a>
               </div>
 
-              <SuggestedSchedule 
-                schedule={schedule} 
-                addToCalendarLoading={addToCalendarLoading} 
-                authLoading={authLoading} 
+              <SuggestedSchedule
+                schedule={schedule}
+                addToCalendarLoading={addToCalendarLoading}
+                authLoading={authLoading}
                 isAuthenticated={isAuthenticated}
                 addToCalendar={addToCalendar}
                 handleAuth={handleAuth}
@@ -366,6 +377,11 @@ function LandingPage() {
           )}
         </div>
       </>
+
+      <ModalCreateAccount
+        isOpened={isModalCreateAccountOpen}
+        onClose={() => setIsModalCreateAccountOpen(false)}
+      />
 
     </div>
 

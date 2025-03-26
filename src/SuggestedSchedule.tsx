@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { CalendarCheck, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import IconGoogleCalendar from "./assets/icon-google-calendar.svg?react";
 import { ScheduleEvent, Schedule } from './types';
-import ScheduleItem from './components/ModalScheduleEvent';
+import ModalScheduleItem from './components/ModalScheduleEvent';
 
 type SuggestedScheduleProps = {
   schedule: Schedule | null;
@@ -22,7 +23,7 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
 }) => {
   if (!schedule || schedule.events.length === 0) return null;
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const [isModalScheduleEventOpen, setIsModalScheduleEventOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
 
   const openModalWithEvent = (
@@ -31,7 +32,7 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
   ) => {
     e.preventDefault();
     setSelectedEvent(clickedEvent);
-    setModalOpen(true);
+    setIsModalScheduleEventOpen(true);
   };
 
   return (
@@ -48,7 +49,7 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
             }
           }}
           disabled={addToCalendarLoading || authLoading}
-          className="w-full md:w-auto mt-2 md:mt-0 py-3 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg text-gray-800 shadow-[0px_1px_1px_#a1e0b2] bg-green-200 hover:bg-green-300 disabled:opacity-50"
+          className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
         >
           <div className="flex items-center justify-center gap-2">
             {addToCalendarLoading ? (
@@ -64,7 +65,7 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
             ) : (
               <>
                 Add to my calendar
-                <CalendarCheck className="w-5 h-5" />
+                <IconGoogleCalendar className="w-5 h-5" />
               </>
             )}
           </div>
@@ -103,9 +104,9 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
         })}
       </ul>
 
-      <ScheduleItem
-        isOpened={modalOpen}
-        onClose={() => setModalOpen(false)}
+      <ModalScheduleItem
+        isOpened={isModalScheduleEventOpen}
+        onClose={() => setIsModalScheduleEventOpen(false)}
         event={selectedEvent}
       />
     </div>

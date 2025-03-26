@@ -10,8 +10,8 @@ function AppContent() {
 
   return (
     <main id="content">
-      <div className="min-h-screen relative">
-        <div className="absolute w-full h-full bg-gradient-to-bl from-[#ffe4e6] to-[#ccfbf1] z-[-1]"></div>
+      <div className="min-h-screen relative relative overflow-hidden before:absolute before:top-0 before:start-1/2 before:bg-[url('bg-element.svg')] before:bg-no-repeat before:bg-top before:size-full before:-z-1 before:transform before:-translate-x-1/2">
+
         <ToastContainer />
 
         <Header />
