@@ -11,9 +11,18 @@ function AppContent() {
   return (
     <main id="content">
       <div className="min-h-screen bg-[#f5f5f5] relative relative overflow-hidden">
-        <img
-          className="absolute left-0 top-0 opacity-[0.3]"
-          src="https://images.unsplash.com/photo-1614854262318-831574f15f1f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+        <div className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: `
+              radial-gradient(at 30% 30%, #a3e6b1 0%, transparent 40%),
+              radial-gradient(at 70% 20%, #f7f1dc 0%, transparent 50%),
+              radial-gradient(at 50% 50%, #cfcfe8 0%, transparent 60%),
+              radial-gradient(at 20% 80%, #2bc29b 0%, transparent 50%),
+              radial-gradient(at 80% 80%, #3ed7c2 0%, transparent 50%)
+            `
+          }}
+        ></div>
+
         <ToastContainer />
 
         <Header />
