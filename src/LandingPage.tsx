@@ -267,35 +267,35 @@ function LandingPage() {
               <div className="my-12">
                 <h2 className="text-gray-600 font-semibold text-2xl md:leading-tight mb-4">Ideas for goals</h2>
                 <a
-                  className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                   onClick={() => setQuery('Read 15 mins every day for 7 days')}
                 >
                   <IconBook className="" />
                   Read 15 mins every day for a week
                 </a>
                 <a
-                  className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                   onClick={() => setQuery('Learn to meditate in 14 days')}
                 >
                   <IconMeditate className="" />
                   Start meditating: a 14-day journey
                 </a>
                 <a
-                  className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                   onClick={() => setQuery('4-week meal prep challenge with a simple, beginner-friendly recipe for each Sunday')}
                 >
                   <IconFoodPrep className="" />
                   4-week Sunday meal prep challenge
                 </a>
                 <a
-                  className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                   onClick={() => setQuery('Drink water 4x daily for 7 days')}
                 >
                   <IconWater className="" />
                   Hydration challenge: drink water 4x daily for 7 days
                 </a>
                 <a
-                  className="mr-2 mb-2 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s font-medium bg-teal-100 hover:bg-teal-200 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500"
                   onClick={() => setQuery('AI fundamentals: Learn AI prompting in 7 days')}
                 >
                   <IconPrompt className="" />
