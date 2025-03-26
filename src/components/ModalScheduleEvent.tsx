@@ -130,7 +130,7 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={onClose}
-                  className="py-2 px-4 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                  className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
                 >
                   Close
                 </button>
