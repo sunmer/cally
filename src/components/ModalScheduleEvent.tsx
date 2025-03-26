@@ -19,6 +19,18 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState<string | null>(null);
 
+  // Format dates like in the <ul> example
+  let formattedDate = "";
+  if (event) {
+    const eventStart = new Date(event.start);
+    const eventEnd = new Date(event.end);
+    const month = eventStart.toLocaleString('default', { month: 'short' });
+    const day = eventStart.getDate();
+    const startTime = eventStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const endTime = eventEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    formattedDate = `${month} ${day}, ${startTime} - ${endTime}`;
+  }
+
   useEffect(() => {
     const generateContent = async () => {
       if (!event) return;
@@ -33,21 +45,17 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
         if (!res.ok) throw new Error('Failed to generate content');
         const data = await res.json();
         const messageContent = data?.choices?.[0]?.message?.content || 'No content received.';
-
         let parsed;
         try {
           parsed = JSON.parse(messageContent);
         } catch (err) {
           console.error('Could not parse messageContent as JSON:', err);
         }
-
         if (parsed && parsed.response) {
           setContent(parsed.response);
         } else {
           setContent(messageContent);
         }
-
-        console.log(messageContent)
       } catch (err: any) {
         console.error("Error generating content:", err);
         setContent("An error occurred while generating content.");
@@ -65,17 +73,46 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
     <>
       <div className={`hs-overlay size-full fixed top-0 start-0 z-[80] pointer-events-none ${isOpened ? 'open' : 'hidden'}`}>
         <div className="hs-overlay-open:mt-7 p-4 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all lg:max-w-2xl lg:w-full m-3 lg:mx-auto">
-          <div className="flex flex-col bg-white border shadow-sm rounded-xl pointer-events-auto">
+          <div className="flex flex-col bg-white shadow-sm rounded-xl pointer-events-auto">
+            <div className="flex justify-between bg-red-500 rounded-t-xl text-white items-center py-3 px-4 border-b border-gray-200">
+              <h3
+                className="font-bold text-gray-800 text-white"
+              >
+                {event?.title} - {formattedDate}
+              </h3>
+              <button
+                type="button"
+                className="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-hidden focus:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-neutral-400 dark:focus:bg-neutral-600"
+                onClick={onClose}
+              >
+                <span className="sr-only">Close</span>
+                <svg
+                  className="shrink-0 size-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={24}
+                  height={24}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+
             <div className="px-4 py-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-900">{event?.title}</h2>
               {loading ? (
                 <div className="flex items-center justify-center">
                   <Loader2 className="w-6 h-6 animate-spin mr-2" />
                   Generating event...
                 </div>
               ) : (
-                <div className="whitespace-pre-wrap text-gray-800">
-                  <ReactMarkdown >
+                <div className="prose overflow-y-auto max-h-96 prose-gray max-w-none text-gray-800">
+                  <ReactMarkdown>
                     {content || ""}
                   </ReactMarkdown>
                 </div>
