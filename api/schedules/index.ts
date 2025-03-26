@@ -1,5 +1,5 @@
 import { uuidv7 } from "uuidv7";
-import { CalendarSchedule, GOOGLE_OAUTH_PREFIX } from '../types.js';
+import { Schedule, GOOGLE_OAUTH_PREFIX } from '../types.js';
 import { getGoogleTokenFromCookie } from '../util.js';
 import { allowCors, getSubAndEmailFromToken } from '../util.js';
 import { query } from '../db.js';
@@ -17,8 +17,8 @@ async function handler(req, res) {
 
 const createEvents = async (req, res) => {
   try {
-    // Expect the request body to conform to the CalendarSchedule type
-    const schedule: CalendarSchedule = req.body;
+    // Expect the request body to conform to the Schedule type
+    const schedule: Schedule = req.body;
     if (!schedule || !Array.isArray(schedule.events) || !schedule.title) {
       return res
         .status(400)

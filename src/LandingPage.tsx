@@ -211,14 +211,14 @@ function LandingPage() {
         >
           <button
             type="button"
-            className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 ${activeTab === 'create' ? '' : 'bg-gray-200'}`}
+            className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'create' ? '!bg-gray-100' : ''}`}
             onClick={() => setActiveTab('create')}
           >
             Create a schedule
           </button>
           <button
             type="button"
-            className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden focus:text-blue-600 ${activeTab === 'myschedules' ? '' : 'bg-gray-200'}`}
+            className={`flex-1 bg-white py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'myschedules' ? '!bg-gray-100' : ''}`}
             onClick={() => setActiveTab('myschedules')}
           >
             My schedules
