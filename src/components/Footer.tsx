@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 const Footer: React.FC = () => {
+
+  const [contactEmail] = useState(['contact', '@', 'calera.io'].join(''));
 
   return (
     <footer className="relative overflow-hidden bg-neutral-900">
@@ -14,6 +17,12 @@ const Footer: React.FC = () => {
               onClick={() => window.scrollTo(0, 0)}>
               Privacy agreement
             </Link>
+            <span className="text-white">&nbsp;/&nbsp;</span>
+            <a
+                className="inline-flex gap-x-2 text-gray-400 hover:text-gray-200 focus:outline-none focus:text-gray-200 dark:text-neutral-400 dark:hover:text-neutral-200 dark:focus:text-neutral-200"
+                href={`mailto:${contactEmail}`}>
+                Email us
+              </a>
             <div className="border-s border-neutral-700 ps-5 ms-5">
               <p className="text-sm text-white">© 2025</p>
             </div>
