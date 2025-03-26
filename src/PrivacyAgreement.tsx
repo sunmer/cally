@@ -44,10 +44,12 @@ const PrivacyAgreement: React.FC = () => {
                   <h3 className="text-xl font-semibold mb-4">4. Privacy and Data Use</h3>
                   <ul className="list-disc pl-5 space-y-2 mt-4">
                     <li><strong>Data Collection</strong>: We collect only the personal and usage data required to operate and improve our scheduling features.</li>
+                    <li><strong>Google User Data</strong>: With your explicit consent, we access your Google Calendar availability using the <code>free/busy</code> scope. This data is used solely to provide smart, conflict-free scheduling suggestions and personalized goal planning. We do not access calendar event details.                    </li>
                     <li><strong>Data Use</strong>: Data is used for scheduling optimization, goal tracking, and anonymous product development insights.</li>
                     <li><strong>Data Sharing</strong>: We do not sell your personal data. Data may be shared with service providers strictly for functionality and legal compliance.</li>
                     <li><strong>Data Storage</strong>: All data is securely stored within the EU and processed in accordance with the General Data Protection Regulation (GDPR).</li>
                     <li><strong>AI and Machine Learning</strong>: Calera does not use your personal data to develop, train, or improve generalized AI or machine learning models.</li>
+
                   </ul>
                 </div>
 
