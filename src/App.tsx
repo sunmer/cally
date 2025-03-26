@@ -10,8 +10,10 @@ function AppContent() {
 
   return (
     <main id="content">
-      <div className="min-h-screen bg-[#f5f5f5] relative relative overflow-hidden before:absolute before:top-0 before:start-1/2 before:bg-[url('bg-element.svg')] before:bg-no-repeat before:bg-top before:size-full before:-z-1 before:transform before:-translate-x-1/2">
-
+      <div className="min-h-screen bg-[#f5f5f5] relative relative overflow-hidden">
+        <img
+          className="absolute left-0 top-0 opacity-[0.3]"
+          src="https://images.unsplash.com/photo-1614854262318-831574f15f1f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
         <ToastContainer />
 
         <Header />
