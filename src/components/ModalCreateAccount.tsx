@@ -1,9 +1,5 @@
 // components/ScheduleItem.tsx
-import React, { useEffect, useState } from 'react';
-import { Loader2 } from "lucide-react";
-import { ScheduleEvent } from '../types';
-import Settings from '../Settings';
-import ReactMarkdown from 'react-markdown';
+import React from 'react';
 
 type ModalCreateAccountProps = {
   isOpened: boolean;
