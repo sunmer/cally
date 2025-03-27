@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import IconGoogleCalendar from "./assets/icon-google-calendar.svg?react";
 import { useScheduleContext } from './ScheduleContext';
 import { useAuth } from './AuthContext';
@@ -25,59 +25,68 @@ const SuggestedSchedule: React.FC = () => {
   return (
     <div className="mt-8 bg-white rounded-lg">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-        <h2 className="text-xl font-medium text-black sm:text-center">{schedule.title}</h2>
-        <button
-          onClick={() => {
-            if (!isAuthenticated) {
-              localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
-              login();
-            } else {
-              addToCalendar(schedule).catch(err => console.error(err));
-            }
-          }}
-          disabled={addLoading}
-          className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
-        >
-          <div className="flex items-center justify-center gap-2">
-            {addLoading ? (
-              <>
-                Adding to your calendar
-                <Loader2 className="w-4 h-4 animate-spin" />
-              </>
-            ) : (
-              <>
-                Add to my calendar
-                <IconGoogleCalendar className="w-5 h-5" />
-              </>
-            )}
-          </div>
-        </button>
-        <button
-          onClick={() => {
-            if (!isAuthenticated) {
-              localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
-              login();
-            } else {
-              downloadICS(schedule).catch(err => console.error(err));
-            }
-          }}
-          disabled={downloadLoading}
-          className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
-        >
-          <div className="flex items-center justify-center gap-2">
-            {downloadLoading ? (
-              <>
-                Downloading ICS
-                <Loader2 className="w-4 h-4 animate-spin" />
-              </>
-            ) : (
-              <>
-                Download as ICS
-              </>
-            )}
-          </div>
-        </button>
+        <h2 className="text-xl font-bold md:text-3xl text-gray-800">
+          {schedule.title}
+        </h2>
+
+        <div className="flex flex-col md:flex-row gap-2 mt-2 md:mt-0 md:ml-auto mb-4 md:mb-0">
+          <button
+            onClick={() => {
+              if (!isAuthenticated) {
+                localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
+                login();
+              } else {
+                addToCalendar(schedule).catch(err => console.error(err));
+              }
+            }}
+            disabled={addLoading}
+            className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
+          >
+            <div className="flex items-center justify-center gap-2">
+              {addLoading ? (
+                <>
+                  Adding to your calendar
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </>
+              ) : (
+                <>
+                  Add to my calendar
+                  <IconGoogleCalendar className="w-5 h-5" />
+                </>
+              )}
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              if (!isAuthenticated) {
+                localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
+                login();
+              } else {
+                downloadICS(schedule).catch(err => console.error(err));
+              }
+            }}
+            disabled={downloadLoading}
+            className="inline-flex justify-center items-center gap-x-3 text-center border text-gray-600 text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
+          >
+            <div className="flex items-center justify-center gap-2">
+              {downloadLoading ? (
+                <>
+                  Downloading ICS
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </>
+              ) : (
+                <>
+                  Download as ICS
+                  <Download className="w-4 h-4" />
+                </>
+              )}
+            </div>
+          </button>
+        </div>
       </div>
+
+
       <ul className="mt-4 space-y-4 schedule">
         {schedule.events.map((event, index) => {
           const eventDate = new Date(event.start);
