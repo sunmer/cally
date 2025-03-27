@@ -264,10 +264,8 @@ function LandingPageContent() {
 }
 
 function LandingPage() {
-  const { isAuthenticated } = useAuth();
-
   return (
-    <ScheduleProvider isAuthenticated={isAuthenticated}>
+    <ScheduleProvider>
       <LandingPageContent />
     </ScheduleProvider>
   );

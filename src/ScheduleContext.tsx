@@ -20,8 +20,7 @@ const ScheduleContext = createContext<ScheduleContextType | undefined>(undefined
 
 export const ScheduleProvider: React.FC<{ 
   children: React.ReactNode; 
-  isAuthenticated: boolean;
-}> = ({ children, isAuthenticated }) => {
+}> = ({ children }) => {
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [mySchedules, setMySchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(false);
