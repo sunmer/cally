@@ -1,54 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import Slider from "react-slick";
-import { toast } from 'react-toastify';
+import { Loader2, CalendarHeart } from "lucide-react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { CalendarHeart, Loader2 } from "lucide-react";
-import Settings from './Settings';
 import { useAuth } from './AuthContext';
+import { ScheduleProvider, useScheduleContext } from './ScheduleContext';
 import IconGoogleCalendar from "./assets/icon-google-calendar.svg?react";
 import IconOutlookCalendar from "./assets/icon-outlook-calendar.svg?react";
 import IconBook from "./assets/icon-book.svg?react";
 import IconMeditate from "./assets/icon-meditate.svg?react";
 import IconWater from "./assets/icon-water.svg?react";
 import IconPrompt from "./assets/icon-prompt.svg?react";
-import IconFoodPrep from "./assets/icon-foodprep.svg?react";
 import SuggestedSchedule from './SuggestedSchedule';
 import { Schedule } from './types';
-import ModalCreateAccount from './components/ModalCreateAccount';
 
 
-type AuthUrlResponse = {
-  authUrl: string;
-};
-
-type SuggestResponse = {
-  choices: {
-    message: { content: string };
-  }[];
-};
-
-function LandingPage() {
-  const [schedule, setSchedule] = useState<Schedule | null>(null);
-  const [error, setError] = useState<string | null>(null);
+function LandingPageContent() {
+  const { isAuthenticated, login } = useAuth();
+  const { schedule, mySchedules, loading, error, createSchedule, fetchSchedules } = useScheduleContext();
   const [query, setQuery] = useState('');
-
-  // Separate loading states for different actions
   const [createScheduleLoading, setCreateScheduleLoading] = useState(false);
-  const [addToCalendarLoading, setAddToCalendarLoading] = useState(false);
-  const [downloadICSLoading, setDownloadICSLoading] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
-
-  const [isModalCreateAccountOpen, setIsModalCreateAccountOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'create' | 'myschedules'>('create');
-  const [mySchedules, setMySchedules] = useState<Schedule[]>([]);
-  const [schedulesLoading, setSchedulesLoading] = useState(false);
-  const [schedulesError, setSchedulesError] = useState<string | null>(null);
 
-  // Use the AuthContext instead of local isAuthenticated state
-  const { isAuthenticated } = useAuth();
-
-  // Slider settings for React Slick
+  // React Slick slider settings for "My schedules"
   const sliderSettings = {
     dots: true,
     infinite: false,
@@ -57,230 +31,56 @@ function LandingPage() {
     slidesToScroll: 1,
     responsive: [
       {
-        breakpoint: 768, // mobile and below
+        breakpoint: 768,
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
           arrows: true,
-          centerMode: false, // Don't use centerMode, we'll use CSS instead
+          centerMode: false,
         },
       },
     ],
     className: "slider-spacing"
   };
+
   // Check for a pending schedule after OAuth redirect
   useEffect(() => {
     if (isAuthenticated && !schedule) {
       const storedSchedule = localStorage.getItem("pendingSchedule");
       if (storedSchedule) {
-        const scheduleFromStorage = JSON.parse(storedSchedule);
-        setSchedule(scheduleFromStorage);
-
-        addToCalendar(scheduleFromStorage);
-
+        const scheduleFromStorage: Schedule = JSON.parse(storedSchedule);
+        // You might trigger adding the schedule automatically here
+        createSchedule(scheduleFromStorage.title).catch(err => console.error(err));
         localStorage.removeItem("pendingSchedule");
       }
     }
   }, [isAuthenticated]);
 
-  // When My Schedules tab is active, fetch schedules from API
+  // When the active tab is "myschedules", fetch the schedules
   useEffect(() => {
     if (activeTab === 'myschedules') {
-      if (!isAuthenticated) {
-        setIsModalCreateAccountOpen(true);
-      } else {
-        const fetchEvents = async () => {
-          setSchedulesLoading(true);
-          setSchedulesError(null);
-          try {
-            const response = await fetch(`${Settings.API_URL}/schedules`, {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include'
-            });
-
-            if (!response.ok) {
-
-            }
-
-            const data = await response.json();
-            setMySchedules(data);
-          } catch (err: any) {
-            setSchedulesError(err.message);
-          } finally {
-            setSchedulesLoading(false);
-          }
-        };
-
-        fetchEvents();
-      }
+      if(isAuthenticated)
+        fetchSchedules();
+      else
+        login();
     }
-  }, [activeTab]);
-
-  // Redirects for authentication
-  const handleAuth = async () => {
-    setAuthLoading(true);
-    try {
-      const res = await fetch(`${Settings.API_URL}/google?type=auth`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-
-      if (!res.ok)
-        throw new Error('Failed to get auth URL');
-
-      const data: AuthUrlResponse = await res.json();
-      window.location.href = data.authUrl;
-    } catch (err: any) {
-      setError(err.message);
-      console.error("Authentication error:", err);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
+  }, [activeTab, isAuthenticated]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (query.length < 6) return;
-
     setCreateScheduleLoading(true);
-    setError(null);
     try {
-      const res = await fetch(`${Settings.API_URL}/suggest?type=suggest`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: query })
-      });
-      if (!res.ok) throw new Error('Failed to get events');
-
-      const data: SuggestResponse = await res.json();
-      const scheduleData: Schedule = JSON.parse(data.choices[0].message.content);
-
-      setSchedule(scheduleData);
+      await createSchedule(query);
     } catch (err: any) {
-      setError(err.message);
-      console.error("Error fetching events:", err);
+      console.error(err);
     } finally {
       setCreateScheduleLoading(false);
     }
   };
 
-  const addToCalendar = async (currentSchedule = schedule) => {
-    if (!currentSchedule) return;
-
-    setAddToCalendarLoading(true);
-    try {
-      // Continue with calendar add
-      const calendarAddResponse = await fetch(`${Settings.API_URL}/google?type=calendar-add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currentSchedule),
-        credentials: 'include'
-      });
-
-      if (!calendarAddResponse.ok)
-        throw new Error('Failed to add events to calendar');
-
-      const googleCalendarResponseJson = await calendarAddResponse.json();
-
-      //Create events in Calera DB
-      await fetch(`${Settings.API_URL}/schedules`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(currentSchedule)
-      });
-
-      toast(`${currentSchedule.title} was successfully added to your calendar!`)
-    } catch (err) {
-      setError(err.message);
-      console.error("Error adding events to calendar:", err);
-    } finally {
-      setAddToCalendarLoading(false);
-    }
-  };
-
-  const formatDateToICS = (dateString) => {
-    const date = new Date(dateString);
-    const pad = (num) => (num < 10 ? "0" + num : num);
-    return (
-      date.getUTCFullYear().toString() +
-      pad(date.getUTCMonth() + 1) +
-      pad(date.getUTCDate()) +
-      "T" +
-      pad(date.getUTCHours()) +
-      pad(date.getUTCMinutes()) +
-      pad(date.getUTCSeconds()) +
-      "Z"
-    );
-  };
-  
-  // Helper to generate ICS file content from a schedule
-  const generateICS = (schedule) => {
-    let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Calera//EN\r\n";
-    schedule.events.forEach((event, index) => {
-      const uid =
-        event.id || `${index}-${new Date().getTime()}@calera.app`;
-      const dtstamp = formatDateToICS(new Date().toISOString());
-      const dtstart = formatDateToICS(event.start);
-      const dtend = formatDateToICS(event.end);
-      icsContent += "BEGIN:VEVENT\r\n";
-      icsContent += `UID:${uid}\r\n`;
-      icsContent += `DTSTAMP:${dtstamp}\r\n`;
-      icsContent += `DTSTART:${dtstart}\r\n`;
-      icsContent += `DTEND:${dtend}\r\n`;
-      icsContent += `SUMMARY:${event.title}\r\n`;
-      if (event.description) {
-        icsContent += `DESCRIPTION:${event.description}\r\n`;
-      }
-      icsContent += "END:VEVENT\r\n";
-    });
-    icsContent += "END:VCALENDAR";
-    return icsContent;
-  };
-
-  const downloadICS = async (currentSchedule = schedule) => {
-    if (!currentSchedule) return;
-  
-    setDownloadICSLoading(true);
-    try {
-      // Generate the ICS content string from the schedule
-      const icsString = generateICS(currentSchedule);
-  
-      // Create a blob with the ICS content and trigger a download
-      const blob = new Blob([icsString], { type: "text/calendar;charset=utf-8" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      // Use a sanitized version of the schedule title for the filename
-      link.href = url;
-      link.download = `${currentSchedule.title.replace(/\s+/g, "_")}.ics`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-  
-      // Optionally, send the schedule to your API to create events in the Calera DB
-      await fetch(`${Settings.API_URL}/schedules`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(currentSchedule),
-      });
-  
-      toast(`${currentSchedule.title} was successfully downloaded`);
-    } catch (err) {
-      setError(err.message);
-      console.error("Error downloading ICS:", err);
-    } finally {
-      setDownloadICSLoading(false);
-    }
-  };
-
-
   return (
     <div className="max-w-5xl mx-auto px-4 xl:px-0 pb-24 z-10 relative">
-
       <div className="flex flex-col px-0 sm:px-8 py-8 mb-8">
         <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl lg:leading-tight bg-clip-text bg-gradient-to-r from-green-500 to-cyan-500 text-transparent">
           <span className="font-bold block">Calera</span>
@@ -293,7 +93,6 @@ function LandingPage() {
           <span className="block text-xs font-semibold uppercase mb-3 sm:mb-0 dark:text-white">
             Compatible with:
           </span>
-          {/* Frameworks */}
           <dl className="flex auto-cols-max items-center gap-3 md:gap-6">
             <dt className="sr-only">Compatible with calendars:</dt>
             <dd className="flex items-center gap-x-2 text-xs font-semibold uppercase dark:text-white">
@@ -303,11 +102,10 @@ function LandingPage() {
               <IconOutlookCalendar className="w-6 h-6" />
             </dd>
           </dl>
-          {/* End Frameworks */}
         </div>
       </div>
-      <>
 
+      <>
         <nav
           className="relative z-0 flex border border-b-0 rounded-t-lg overflow-hidden"
           aria-label="Tabs"
@@ -360,8 +158,6 @@ function LandingPage() {
                       )}
                     </div>
                   </button>
-
-
                 </div>
               </form>
               {error && (
@@ -369,65 +165,54 @@ function LandingPage() {
                   {error}
                 </div>
               )}
-
               <div className="my-12">
                 <h2 className="text-gray-600 font-semibold text-2xl md:leading-tight mb-4">Ideas for goals</h2>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Read 15 mins every day for 7 days')}
                 >
-                  <IconBook className="" />
+                  <IconBook />
                   Read 15 mins every day for a week
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Learn to meditate in 14 days')}
                 >
-                  <IconMeditate className="" />
+                  <IconMeditate />
                   Start meditating: a 14-day journey
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('4-week meal prep challenge with a simple, beginner-friendly recipe for each Sunday')}
                 >
-                  <IconFoodPrep className="" />
+                  <IconBook />
                   4-week Sunday meal prep challenge
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Drink water 4x daily for 7 days')}
                 >
-                  <IconWater className="" />
+                  <IconWater />
                   Hydration challenge: drink water 4x daily for 7 days
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-s border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('AI fundamentals: Learn AI prompting in 7 days')}
                 >
-                  <IconPrompt className="" />
+                  <IconPrompt />
                   AI fundamentals: Learn AI prompting in 7 days
                 </a>
               </div>
-
-              <SuggestedSchedule
-                schedule={schedule}
-                addToCalendarLoading={addToCalendarLoading}
-                downloadICSLoading={downloadICSLoading}
-                authLoading={authLoading}
-                isAuthenticated={isAuthenticated}
-                addToCalendar={addToCalendar}
-                downloadICS={downloadICS}
-                handleAuth={handleAuth}
-              />
+              <SuggestedSchedule />
             </div>
           )}
           {activeTab === 'myschedules' && (
             <div>
               <div className="mt-8">
-                {schedulesLoading ? (
+                {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
-                ) : schedulesError ? (
-                  <div className="bg-red-900/30 text-red-300 px-4 py-3 rounded-lg">{schedulesError}</div>
+                ) : error ? (
+                  <div className="bg-red-900/30 text-red-300 px-4 py-3 rounded-lg">{error}</div>
                 ) : (
                   <ul className="mt-4 space-y-4">
                     {mySchedules.map((sch, idx) => (
@@ -446,9 +231,9 @@ function LandingPage() {
                                   <div key={index}>
                                     <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
                                       <div className="flex flex-col w-full md:flex-row">
-                                        <div className="flex bg-red-500 flex-row justify-start p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-t md:rounded-none md:rounded-tl md:rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
-                                          <div className="md:text-2xl text-white mr-2 md:mr-0">{month}</div>
-                                          <div className="md:text-5xl text-white mr-2 md:mr-0">{day}</div>
+                                        <div className="flex bg-red-500 flex-row justify-start p-4 font-bold leading-none text-gray-800 uppercase md:flex-col md:items-center md:justify-center md:w-1/4">
+                                          <div className="md:text-2xl text-white mr-2">{month}</div>
+                                          <div className="md:text-5xl text-white mr-2">{day}</div>
                                           <div className="md:text-xl text-white">{startTime} - {endTime}</div>
                                         </div>
                                         <div className="p-4 font-normal text-gray-800 md:w-3/4">
@@ -474,14 +259,17 @@ function LandingPage() {
           )}
         </div>
       </>
-
-      <ModalCreateAccount
-        isOpened={isModalCreateAccountOpen}
-        onClose={() => setIsModalCreateAccountOpen(false)}
-      />
-
     </div>
+  );
+}
 
+function LandingPage() {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <ScheduleProvider isAuthenticated={isAuthenticated}>
+      <LandingPageContent />
+    </ScheduleProvider>
   );
 }
 

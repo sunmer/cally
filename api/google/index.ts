@@ -37,8 +37,8 @@ async function handler(req, res) {
     await logout(req, res);
   } else if (req.method === 'GET' && type === 'auth-callback') {
     await handleAuthCallback(req, res);
-  } else if (req.method === 'POST' && type === 'calendar-add') {
-    await addToCalendar(req, res);
+  } else if (req.method === 'POST' && type === 'schedule-add') {
+    await scheduleAdd(req, res);
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
@@ -161,7 +161,7 @@ async function handleAuthCallback(req, res) {
 }
 
 // Add events to Google Calendar
-async function addToCalendar(req, res) {
+async function scheduleAdd(req, res) {
   try {
     // Expecting the request body to match the new CalendarSchedule type
     const schedule = req.body as Schedule;

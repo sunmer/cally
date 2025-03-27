@@ -96,7 +96,7 @@ const getEvents = async (req, res) => {
     const result = await query(
       `SELECT s.title, s.events, s.uuid, s.created
        FROM schedules s
-       JOIN users u ON e.user_id = u.id
+       JOIN users u ON s.user_id = u.id
        WHERE u.sub = $1`,
       [GOOGLE_OAUTH_PREFIX + sub]
     );

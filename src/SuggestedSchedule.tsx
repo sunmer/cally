@@ -1,38 +1,21 @@
 import React, { useState } from 'react';
 import { Loader2 } from "lucide-react";
 import IconGoogleCalendar from "./assets/icon-google-calendar.svg?react";
-import { ScheduleEvent, Schedule } from './types';
+import { useScheduleContext } from './ScheduleContext';
+import { useAuth } from './AuthContext';
 import ModalScheduleItem from './components/ModalScheduleEvent';
 
-type SuggestedScheduleProps = {
-  schedule: Schedule | null;
-  addToCalendarLoading: boolean;
-  downloadICSLoading: boolean;
-  authLoading: boolean;
-  isAuthenticated: boolean;
-  addToCalendar: () => void;
-  downloadICS: () => void;
-  handleAuth: () => void;
-};
-
-const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
-  schedule,
-  addToCalendarLoading,
-  downloadICSLoading,
-  authLoading,
-  isAuthenticated,
-  addToCalendar,
-  downloadICS,
-  handleAuth,
-}) => {
-  if (!schedule || schedule.events.length === 0) return null;
-
+const SuggestedSchedule: React.FC = () => {
+  const { schedule, addToCalendar, downloadICS, addLoading, downloadLoading } = useScheduleContext();
+  const { isAuthenticated, login } = useAuth();
   const [isModalScheduleEventOpen, setIsModalScheduleEventOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+
+  if (!schedule || schedule.events.length === 0) return null;
 
   const openModalWithEvent = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    clickedEvent: ScheduleEvent
+    clickedEvent: any
   ) => {
     e.preventDefault();
     setSelectedEvent(clickedEvent);
@@ -47,23 +30,18 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
           onClick={() => {
             if (!isAuthenticated) {
               localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
-              handleAuth();
+              login();
             } else {
-              addToCalendar();
+              addToCalendar(schedule).catch(err => console.error(err));
             }
           }}
-          disabled={addToCalendarLoading || authLoading}
+          disabled={addLoading}
           className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
         >
           <div className="flex items-center justify-center gap-2">
-            {addToCalendarLoading ? (
+            {addLoading ? (
               <>
                 Adding to your calendar
-                <Loader2 className="w-4 h-4 animate-spin" />
-              </>
-            ) : authLoading ? (
-              <>
-                Authenticating
                 <Loader2 className="w-4 h-4 animate-spin" />
               </>
             ) : (
@@ -78,23 +56,18 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
           onClick={() => {
             if (!isAuthenticated) {
               localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
-              handleAuth();
+              login();
             } else {
-              downloadICS();
+              downloadICS(schedule).catch(err => console.error(err));
             }
           }}
-          disabled={downloadICSLoading || authLoading}
+          disabled={downloadLoading}
           className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
         >
           <div className="flex items-center justify-center gap-2">
-            {downloadICSLoading ? (
+            {downloadLoading ? (
               <>
                 Downloading ICS
-                <Loader2 className="w-4 h-4 animate-spin" />
-              </>
-            ) : authLoading ? (
-              <>
-                Authenticating
                 <Loader2 className="w-4 h-4 animate-spin" />
               </>
             ) : (
@@ -118,11 +91,11 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
               <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
                 <a
                   className={`flex flex-col w-full md:flex-row ${schedule.requiresAdditionalContent ? 'cursor-pointer' : ''}`}
-                  onClick={(e) => schedule.requiresAdditionalContent ? openModalWithEvent(e, event) : e.preventDefault() }
+                  onClick={(e) => schedule.requiresAdditionalContent ? openModalWithEvent(e, event) : e.preventDefault()}
                 >
                   <div className="flex bg-red-500 flex-row justify-start p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-t md:rounded-t-none md:rounded-tl md:rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
-                    <div className="md:text-2xl text-white mr-2 md:mr-0">{month}</div>
-                    <div className="md:text-5xl text-white mr-2 md:mr-0">{day}</div>
+                    <div className="md:text-2xl text-white mr-2">{month}</div>
+                    <div className="md:text-5xl text-white mr-2">{day}</div>
                     <div className="md:text-xl text-white">{startTime} - {endTime}</div>
                   </div>
                   <div className="p-4 font-normal text-gray-800 md:w-3/4">
@@ -137,7 +110,6 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
           );
         })}
       </ul>
-
       <ModalScheduleItem
         isOpened={isModalScheduleEventOpen}
         onClose={() => setIsModalScheduleEventOpen(false)}

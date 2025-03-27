@@ -4,7 +4,6 @@ import Settings from './Settings';
 type User = {
   email?: string;
   sub?: string;
-  // Add other user properties as needed
 } | null;
 
 type AuthUrlResponse = {
@@ -18,7 +17,6 @@ type AuthContextType = {
   error: string | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
-  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +27,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check auth status on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -38,10 +35,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-        
         if (res.ok) {
           const data = await res.json();
-
           setIsAuthenticated(data.authenticated);
           if (data.authenticated && data.user) {
             setUser(data.user);
@@ -60,11 +55,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     };
-    
+
     checkAuth();
   }, []);
 
-  // New login implementation in AuthContext
   const login = async () => {
     setLoading(true);
     try {
@@ -73,9 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
-      
       if (!res.ok) throw new Error('Failed to get auth URL');
-      
       const data: AuthUrlResponse = await res.json();
       window.location.href = data.authUrl;
     } catch (err: any) {
@@ -94,16 +86,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
-      
-      if (!res.ok)
-        throw new Error('Logout failed');
-
+      if (!res.ok) throw new Error('Logout failed');
       setIsAuthenticated(false);
       setUser(null);
       localStorage.clear();
       sessionStorage.clear();
       window.location.reload();
-      
     } catch (err: any) {
       setError('Logout failed, please try again.');
       console.error("Error logging out:", err);
@@ -118,9 +106,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user, 
       loading, 
       error, 
-      login,
-      logout, 
-      setIsAuthenticated 
+      login, 
+      logout 
     }}>
       {children}
     </AuthContext.Provider>
