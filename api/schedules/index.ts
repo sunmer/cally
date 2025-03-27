@@ -56,12 +56,17 @@ const createEvents = async (req, res) => {
       userId = userResult.rows[0].id;
     }
 
-    // Use userId in the events insertion query
+    const eventsWithIds = schedule.events.map((event, index) => ({
+      ...event,
+      id: index + 1
+    }));
+
     const newUuidEvent = uuidv7();
     await query(
-      `INSERT INTO events (events, title, user_id, uuid) VALUES ($1, $2, $3, $4)`,
-      [JSON.stringify(schedule.events), schedule.title, userId, newUuidEvent]
+      `INSERT INTO schedules (events, title, user_id, uuid) VALUES ($1, $2, $3, $4)`,
+      [JSON.stringify(eventsWithIds), schedule.title, userId, newUuidEvent]
     );
+
     console.log(`Inserted events for user_id: ${userId}`);
 
     return res.status(200).json({ message: 'Event processed successfully' });
@@ -89,8 +94,8 @@ const getEvents = async (req, res) => {
 
     // Check if the user already exists
     const result = await query(
-      `SELECT e.title, e.events, e.uuid, e.created
-       FROM events e
+      `SELECT s.title, s.events, s.uuid, s.created
+       FROM schedules s
        JOIN users u ON e.user_id = u.id
        WHERE u.sub = $1`,
       [GOOGLE_OAUTH_PREFIX + sub]

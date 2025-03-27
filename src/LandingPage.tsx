@@ -36,6 +36,7 @@ function LandingPage() {
   // Separate loading states for different actions
   const [createScheduleLoading, setCreateScheduleLoading] = useState(false);
   const [addToCalendarLoading, setAddToCalendarLoading] = useState(false);
+  const [downloadICSLoading, setDownloadICSLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
 
   const [isModalCreateAccountOpen, setIsModalCreateAccountOpen] = useState(false);
@@ -200,6 +201,82 @@ function LandingPage() {
     }
   };
 
+  const formatDateToICS = (dateString) => {
+    const date = new Date(dateString);
+    const pad = (num) => (num < 10 ? "0" + num : num);
+    return (
+      date.getUTCFullYear().toString() +
+      pad(date.getUTCMonth() + 1) +
+      pad(date.getUTCDate()) +
+      "T" +
+      pad(date.getUTCHours()) +
+      pad(date.getUTCMinutes()) +
+      pad(date.getUTCSeconds()) +
+      "Z"
+    );
+  };
+  
+  // Helper to generate ICS file content from a schedule
+  const generateICS = (schedule) => {
+    let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Calera//EN\r\n";
+    schedule.events.forEach((event, index) => {
+      const uid =
+        event.id || `${index}-${new Date().getTime()}@calera.app`;
+      const dtstamp = formatDateToICS(new Date().toISOString());
+      const dtstart = formatDateToICS(event.start);
+      const dtend = formatDateToICS(event.end);
+      icsContent += "BEGIN:VEVENT\r\n";
+      icsContent += `UID:${uid}\r\n`;
+      icsContent += `DTSTAMP:${dtstamp}\r\n`;
+      icsContent += `DTSTART:${dtstart}\r\n`;
+      icsContent += `DTEND:${dtend}\r\n`;
+      icsContent += `SUMMARY:${event.title}\r\n`;
+      if (event.description) {
+        icsContent += `DESCRIPTION:${event.description}\r\n`;
+      }
+      icsContent += "END:VEVENT\r\n";
+    });
+    icsContent += "END:VCALENDAR";
+    return icsContent;
+  };
+
+  const downloadICS = async (currentSchedule = schedule) => {
+    if (!currentSchedule) return;
+  
+    setDownloadICSLoading(true);
+    try {
+      // Generate the ICS content string from the schedule
+      const icsString = generateICS(currentSchedule);
+  
+      // Create a blob with the ICS content and trigger a download
+      const blob = new Blob([icsString], { type: "text/calendar;charset=utf-8" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      // Use a sanitized version of the schedule title for the filename
+      link.href = url;
+      link.download = `${currentSchedule.title.replace(/\s+/g, "_")}.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+  
+      // Optionally, send the schedule to your API to create events in the Calera DB
+      await fetch(`${Settings.API_URL}/schedules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(currentSchedule),
+      });
+  
+      toast(`${currentSchedule.title} was successfully downloaded`);
+    } catch (err) {
+      setError(err.message);
+      console.error("Error downloading ICS:", err);
+    } finally {
+      setDownloadICSLoading(false);
+    }
+  };
+
 
   return (
     <div className="max-w-5xl mx-auto px-4 xl:px-0 pb-24 z-10 relative">
@@ -335,9 +412,11 @@ function LandingPage() {
               <SuggestedSchedule
                 schedule={schedule}
                 addToCalendarLoading={addToCalendarLoading}
+                downloadICSLoading={downloadICSLoading}
                 authLoading={authLoading}
                 isAuthenticated={isAuthenticated}
                 addToCalendar={addToCalendar}
+                downloadICS={downloadICS}
                 handleAuth={handleAuth}
               />
             </div>

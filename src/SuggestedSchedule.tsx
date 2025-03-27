@@ -7,18 +7,22 @@ import ModalScheduleItem from './components/ModalScheduleEvent';
 type SuggestedScheduleProps = {
   schedule: Schedule | null;
   addToCalendarLoading: boolean;
+  downloadICSLoading: boolean;
   authLoading: boolean;
   isAuthenticated: boolean;
   addToCalendar: () => void;
+  downloadICS: () => void;
   handleAuth: () => void;
 };
 
 const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
   schedule,
   addToCalendarLoading,
+  downloadICSLoading,
   authLoading,
   isAuthenticated,
   addToCalendar,
+  downloadICS,
   handleAuth,
 }) => {
   if (!schedule || schedule.events.length === 0) return null;
@@ -66,6 +70,36 @@ const SuggestedSchedule: React.FC<SuggestedScheduleProps> = ({
               <>
                 Add to my calendar
                 <IconGoogleCalendar className="w-5 h-5" />
+              </>
+            )}
+          </div>
+        </button>
+        <button
+          onClick={() => {
+            if (!isAuthenticated) {
+              localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
+              handleAuth();
+            } else {
+              downloadICS();
+            }
+          }}
+          disabled={downloadICSLoading || authLoading}
+          className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
+        >
+          <div className="flex items-center justify-center gap-2">
+            {downloadICSLoading ? (
+              <>
+                Downloading ICS
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </>
+            ) : authLoading ? (
+              <>
+                Authenticating
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </>
+            ) : (
+              <>
+                Download as ICS
               </>
             )}
           </div>

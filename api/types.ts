@@ -1,6 +1,7 @@
 export const GOOGLE_OAUTH_PREFIX = 'google:';
 
 export type ScheduleEvent = {
+  id: number;
   title: string;
   description: string;
   start: string;
