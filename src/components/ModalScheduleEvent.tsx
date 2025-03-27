@@ -5,6 +5,11 @@ import { ScheduleEvent } from '../types';
 import Settings from '../Settings';
 import ReactMarkdown from 'react-markdown';
 
+type GenerateResponse = {
+  content: string;
+  questions: string[];
+}
+
 type ModalScheduleEventProps = {
   isOpened: boolean;
   onClose: () => void;
@@ -34,17 +39,15 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
   useEffect(() => {
     const generateContent = async () => {
       if (!event) return;
-      setLoading(true);
-      setContent(null);
-      // Create a unique key for this event's content.
-      // (Ideally use a unique event id; here we use title as an example)
-      const storageKey = `modalContent_${event.title}`;
-      const cachedContent = sessionStorage.getItem(storageKey);
-      if (cachedContent) {
-        setContent(cachedContent);
-        setLoading(false);
+
+      if (event.content) {
+        setContent(event.content);
         return;
       }
+      
+      setLoading(true);
+      setContent(null);
+
       try {
         const res = await fetch(`${Settings.API_URL}/suggest?type=generate`, {
           method: 'POST',
@@ -52,18 +55,25 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
           body: JSON.stringify(event),
         });
         if (!res.ok) throw new Error('Failed to generate content');
+
         const data = await res.json();
         const messageContent = data?.choices?.[0]?.message?.content || 'No content received.';
-        let parsed;
+
+        let parsed: GenerateResponse;
+        let finalContent;
+
         try {
           parsed = JSON.parse(messageContent);
+
+          if (event) {
+            event.content = parsed.content;
+            event.questions = parsed.questions
+            finalContent = parsed.content;
+          }
         } catch (err) {
-          console.error('Could not parse messageContent as JSON:', err);
+          console.warn('Could not parse messageContent as JSON:', err);
         }
-        // Use parsed response if available, otherwise use the raw message
-        const finalContent = parsed && parsed.response ? parsed.response : messageContent;
-        // Store the content in session storage for later use
-        sessionStorage.setItem(storageKey, finalContent);
+        
         setContent(finalContent);
       } catch (err: any) {
         console.error("Error generating content:", err);
@@ -72,12 +82,12 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
         setLoading(false);
       }
     };
-  
+
     if (isOpened && event) {
       generateContent();
     }
   }, [isOpened, event]);
-  
+
 
   return (
     <>

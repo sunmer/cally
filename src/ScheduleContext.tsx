@@ -85,26 +85,36 @@ export const ScheduleProvider: React.FC<{
     return icsContent;
   };
 
-  const addToCalendar = async (sch: Schedule) => {
-    if (!sch) return;
+  const addToCalendar = async (schedule: Schedule) => {
+    if (!schedule) return;
+
     setAddLoading(true);
+    
     try {
-      const calendarAddResponse = await fetch(`${Settings.API_URL}/google?type=calendar-add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sch),
-        credentials: 'include'
-      });
-      if (!calendarAddResponse.ok) throw new Error('Failed to add events to calendar');
-      
       // Save the schedule in your DB
-      await fetch(`${Settings.API_URL}/schedules`, {
+      const createScheduleResponse = await fetch(`${Settings.API_URL}/schedules`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(sch)
+        body: JSON.stringify(schedule)
       });
-      toast(`${sch.title} was successfully added to your calendar!`);
+
+      if (!createScheduleResponse.ok) throw new Error('Failed to save schedule');
+
+      const createScheduleResponseJSON = await createScheduleResponse.json();
+
+      schedule.uuid = createScheduleResponseJSON.uuid;
+
+      const addScheduleToGoogleCalendarResponse = await fetch(`${Settings.API_URL}/google?type=add-schedule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(schedule),
+        credentials: 'include'
+      });
+      
+      if (!addScheduleToGoogleCalendarResponse.ok) throw new Error('Failed to add events to calendar');
+
+      toast(`${schedule.title} was successfully added to your calendar!`);
     } catch (err: any) {
       console.error("Error adding events to calendar:", err);
       throw err;

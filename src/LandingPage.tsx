@@ -118,14 +118,14 @@ function LandingPageContent() {
         >
           <button
             type="button"
-            className={`flex-1 py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'create' ? 'bg-gray-100' : 'bg-white'}`}
+            className={`flex-1 py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'create' ? 'bg-white' : 'bg-gray-100'}`}
             onClick={() => setActiveTab('create')}
           >
             Create a schedule
           </button>
           <button
             type="button"
-            className={`flex-1 py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'myschedules' ? 'bg-gray-100' : 'bg-white'}`}
+            className={`flex-1 py-4 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:z-10 focus:outline-hidden ${activeTab === 'myschedules' ? 'bg-white' : 'bg-gray-100'}`}
             onClick={() => setActiveTab('myschedules')}
           >
             My schedules
@@ -201,10 +201,10 @@ function LandingPageContent() {
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('AI fundamentals: Learn AI prompting in 7 days')}
+                  onClick={() => setQuery('AI fundamentals: Learn AI prompting in 3 days')}
                 >
                   <IconPrompt />
-                  AI fundamentals: Learn AI prompting in 7 days
+                  AI fundamentals: Learn AI prompting in 3 days
                 </a>
               </div>
               <SuggestedSchedule />

@@ -62,14 +62,14 @@ const createEvents = async (req, res) => {
     }));
 
     const newUuidEvent = uuidv7();
-    await query(
-      `INSERT INTO schedules (events, title, user_id, uuid) VALUES ($1, $2, $3, $4)`,
+    const insertScheduleResult = await query(
+      `INSERT INTO schedules (events, title, user_id, uuid) VALUES ($1, $2, $3, $4) RETURNING uuid`,
       [JSON.stringify(eventsWithIds), schedule.title, userId, newUuidEvent]
     );
 
     console.log(`Inserted events for user_id: ${userId}`);
 
-    return res.status(200).json({ message: 'Event processed successfully' });
+    return res.status(200).json({ uuid: insertScheduleResult.rows[0].uuid });
   } catch (error) {
     console.error('Error processing events:', error);
     return res.status(500).json({ error: 'Failed to process events' });

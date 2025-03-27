@@ -51,6 +51,7 @@ Important scheduling rules:
 6. Determine "requiresAdditionalContent" by assessing the complexity of the request:
    - Use false for straightforward or routine challenges.
    - Use true if the request implies extra guidance or dynamic instructions; in this case, generate specific, realistic event titles and keep descriptions succinct.
+7. Ensure that all event "start" times are exactly at the hour (e.g., "09:00:00Z") or half past the hour (e.g., "09:30:00Z").
 
 Example generalized response format:
 {
@@ -61,7 +62,7 @@ Example generalized response format:
       "title": "Specific Event Title",
       "description": "Brief description",
       "start": "2025-03-25T09:00:00Z",
-      "end": "2025-03-25T09:45:00Z"
+      "end": "2025-03-25T10:30:00Z"
     }
   ]
 }`;
@@ -101,9 +102,6 @@ Example generalized response format:
   }
 }
 
-
-
-
 async function generate(req, res) {
   let event;
   try {
@@ -126,7 +124,7 @@ Analyze the event details to assess the session’s complexity and engagement le
 
 Return your output as a JSON object with the following format:
 {
-  "response": "The complete lesson text",
+  "content": "The complete lesson text, without the follow-up questions",
   "questions": ["First follow-up question", "Second follow-up question", "Third follow-up question"]
 }`;
   
