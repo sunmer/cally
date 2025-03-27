@@ -5,8 +5,8 @@ import { google } from 'googleapis';
 const isProd = process.env.VERCEL_ENV === 'production';
 
 const WEB_URL = isProd ?
-  `https://calera.io/` :
-  `http://localhost:5173/`;
+  `https://calera.io` :
+  `http://localhost:5173`;
 
 const COOKIE_DOMAIN = '.calera.io';
 
@@ -203,7 +203,7 @@ async function addSchedule(req, res) {
         },
         source: {
           title: `Link to ${event.title}`,
-          url: WEB_URL + schedule.uuid + "/" + event.id
+          url: WEB_URL + "/events/" + schedule.uuid + "/" + event.id
         }
       };
 

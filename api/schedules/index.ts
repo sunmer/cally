@@ -9,7 +9,7 @@ async function handler(req, res) {
   if (req.method === 'POST') {
     await createEvents(req, res);
   } else if(req.method === 'GET') {
-    await getEvents(req, res);
+    await getSchedule(req, res);
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
@@ -49,6 +49,7 @@ const createEvents = async (req, res) => {
         `INSERT INTO users (sub, email, uuid) VALUES ($1, $2, $3) RETURNING id`,
         [`${GOOGLE_OAUTH_PREFIX}${sub}`, email, newUuidUser]
       );
+
       console.log(`Created new user with sub: ${sub}`);
       userId = newUser.rows[0].id;
     } else {
@@ -76,7 +77,7 @@ const createEvents = async (req, res) => {
   }
 };
 
-const getEvents = async (req, res) => {
+const getSchedule = async (req, res) => {
   try {
     // Extract the token from the cookie and then the sub from the token
     const token = getGoogleTokenFromCookie(req);
@@ -92,7 +93,6 @@ const getEvents = async (req, res) => {
 
     const { sub } = tokenData;
 
-    // Check if the user already exists
     const result = await query(
       `SELECT s.title, s.events, s.uuid, s.created
        FROM schedules s
@@ -100,7 +100,6 @@ const getEvents = async (req, res) => {
        WHERE u.sub = $1`,
       [GOOGLE_OAUTH_PREFIX + sub]
     );
-
 
     return res.status(200).json(result.rows);
   } catch (error) {
