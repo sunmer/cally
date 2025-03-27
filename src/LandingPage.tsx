@@ -6,6 +6,8 @@ import "slick-carousel/slick/slick-theme.css";
 import { CalendarHeart, Loader2 } from "lucide-react";
 import Settings from './Settings';
 import { useAuth } from './AuthContext';
+import IconGoogleCalendar from "./assets/icon-google-calendar.svg?react";
+import IconOutlookCalendar from "./assets/icon-outlook-calendar.svg?react";
 import IconBook from "./assets/icon-book.svg?react";
 import IconMeditate from "./assets/icon-meditate.svg?react";
 import IconWater from "./assets/icon-water.svg?react";
@@ -179,6 +181,8 @@ function LandingPage() {
       if (!calendarAddResponse.ok)
         throw new Error('Failed to add events to calendar');
 
+      const googleCalendarResponseJson = await calendarAddResponse.json();
+
       //Create events in Calera DB
       await fetch(`${Settings.API_URL}/schedules`, {
         method: 'POST',
@@ -201,15 +205,29 @@ function LandingPage() {
     <div className="max-w-5xl mx-auto px-4 xl:px-0 pb-24 z-10 relative">
 
       <div className="flex flex-col px-0 sm:px-8 py-8 mb-8">
-        <h1 className="font-semibold text-5xl md:text-6xl bg-clip-text bg-gradient-to-r from-green-500 to-cyan-500 text-transparent">
+        <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl lg:leading-tight bg-clip-text bg-gradient-to-r from-green-500 to-cyan-500 text-transparent">
           <span className="font-bold block">Calera</span>
         </h1>
-
-
-        <span className="text-4xl text-black">Your goals, instantly scheduled</span>
-        <p className="mt-5 text-neutral-500 md:text-lg underline decoration-teal-500 decoration-3">
-          Calera uses AI to turn personal goals into schedules aligned with your calendar
+        <span className="text-2xl font-bold md:text-3xl text-gray-800">Your goals, instantly scheduled</span>
+        <p className="mt-4 md:text-lg text-gray-600 dark:text-neutral-400">
+          Calera uses AI to turn personal goals into schedules aligned with your personal calendar
         </p>
+        <div className="sm:flex auto-cols-max items-center gap-3 md:gap-6 mt-6">
+          <span className="block text-xs font-semibold uppercase mb-3 sm:mb-0 dark:text-white">
+            Compatible with:
+          </span>
+          {/* Frameworks */}
+          <dl className="flex auto-cols-max items-center gap-3 md:gap-6">
+            <dt className="sr-only">Compatible with calendars:</dt>
+            <dd className="flex items-center gap-x-2 text-xs font-semibold uppercase dark:text-white">
+              <IconGoogleCalendar className="w-5 h-5" />
+            </dd>
+            <dd className="flex items-center gap-x-2 text-xs font-semibold uppercase dark:text-white">
+              <IconOutlookCalendar className="w-6 h-6" />
+            </dd>
+          </dl>
+          {/* End Frameworks */}
+        </div>
       </div>
       <>
 
