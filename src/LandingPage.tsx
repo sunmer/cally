@@ -11,15 +11,14 @@ import IconBook from "./assets/icon-book.svg?react";
 import IconMeditate from "./assets/icon-meditate.svg?react";
 import IconWater from "./assets/icon-water.svg?react";
 import IconPrompt from "./assets/icon-prompt.svg?react";
-import SuggestedSchedule from './SuggestedSchedule';
+import SuggestedSchedule from './components/SuggestedSchedule';
 import { Schedule } from './types';
-import { toast } from 'react-toastify';
-import MySchedules from './MySchedules';
+import MySchedules from './components/MySchedules';
 
 
 function LandingPage() {
   const { isAuthenticated, login, loading: isAuthenticationLoading } = useAuth();
-  const { schedule, loading: error, createSchedule, fetchSchedules } = useScheduleContext();
+  const { schedule, createSchedule, setSchedule, fetchSchedules } = useScheduleContext();
   const [query, setQuery] = useState('');
   const [createScheduleLoading, setCreateScheduleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'create' | 'myschedules'>('create');
@@ -30,8 +29,8 @@ function LandingPage() {
       const storedSchedule = localStorage.getItem("pendingSchedule");
       if (storedSchedule) {
         const scheduleFromStorage: Schedule = JSON.parse(storedSchedule);
-        // You might trigger adding the schedule automatically here
-        createSchedule(scheduleFromStorage.title).catch(err => console.error(err));
+        // Instead of calling createSchedule again, just set the schedule
+        setSchedule(scheduleFromStorage);
         localStorage.removeItem("pendingSchedule");
       }
     }
@@ -40,8 +39,6 @@ function LandingPage() {
   // When the active tab is "myschedules", fetch the schedules
   useEffect(() => {
     if (isAuthenticationLoading) {
-      toast('Authenticating...')
-
       return;
     }
 
@@ -150,11 +147,6 @@ function LandingPage() {
                   </button>
                 </div>
               </form>
-              {error && (
-                <div className="bg-red-900/30 text-red-300 px-4 py-3 rounded-lg">
-                  {error}
-                </div>
-              )}
               <div className="my-12">
                 <h2 className="text-xl font-bold md:text-3xl text-gray-800 mb-4">Ideas for goals</h2>
                 <a

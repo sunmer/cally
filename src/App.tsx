@@ -2,9 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import Footer from './components/Footer';
 import Header from './components/Header';
-import PrivacyAgreement from './PrivacyAgreement';
+import PrivacyAgreementPage from './PrivacyAgreementPage';
 import LandingPage from './LandingPage';
-import ScheduleEvent from './ScheduleEvent';
+import ScheduleEventPage from './ScheduleEventPage';
 import { ScheduleProvider } from './ScheduleContext';
 
 
@@ -31,8 +31,8 @@ function AppContent() {
 
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/privacy-agreement" element={<PrivacyAgreement />} />
-          <Route path="/events/:uuid/:id" element={<ScheduleEvent />} />
+          <Route path="/privacy-agreement" element={<PrivacyAgreementPage />} />
+          <Route path="/events/:uuid/:id" element={<ScheduleEventPage />} />
         </Routes>
 
         <Footer />

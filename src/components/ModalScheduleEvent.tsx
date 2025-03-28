@@ -21,7 +21,9 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
   onClose,
   event
 }) => {
-  const [loading, setLoading] = useState(false);
+  // loaderType will determine the loading state: "loading" when using pre-existing content,
+  // "generating" when fetching new content, and null when done.
+  const [loaderType, setLoaderType] = useState<"loading" | "generating" | null>(null);
   const [content, setContent] = useState<string | null>(null);
 
   // Format dates like in the <ul> example
@@ -39,13 +41,18 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
   useEffect(() => {
     const generateContent = async () => {
       if (!event) return;
-
+      
+      // If the event already has content, use the "loading content" loader.
       if (event.content) {
+        setLoaderType("loading");
+        // Optionally, you can simulate a short delay if you want to show the loader visibly.
         setContent(event.content);
+        setLoaderType(null);
         return;
       }
       
-      setLoading(true);
+      // Otherwise, use the "generating content" loader and fetch new content.
+      setLoaderType("generating");
       setContent(null);
 
       try {
@@ -61,13 +68,11 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
 
         let parsed: GenerateResponse;
         let finalContent;
-
         try {
           parsed = JSON.parse(messageContent);
-
           if (event) {
             event.content = parsed.content;
-            event.questions = parsed.questions
+            event.questions = parsed.questions;
             finalContent = parsed.content;
           }
         } catch (err) {
@@ -79,7 +84,7 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
         console.error("Error generating content:", err);
         setContent("An error occurred while generating content.");
       } finally {
-        setLoading(false);
+        setLoaderType(null);
       }
     };
 
@@ -88,16 +93,13 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
     }
   }, [isOpened, event]);
 
-
   return (
     <>
       <div className={`hs-overlay size-full fixed top-0 start-0 z-[80] pointer-events-none ${isOpened ? 'open' : 'hidden'}`}>
         <div className="hs-overlay-open:mt-7 p-4 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all lg:max-w-2xl lg:w-full m-3 lg:mx-auto">
           <div className="flex flex-col bg-white shadow-sm rounded-xl pointer-events-auto">
             <div className="flex justify-between bg-red-500 rounded-t-xl text-white items-center py-3 px-4 border-b border-gray-200">
-              <h3
-                className="font-bold text-gray-800 text-white"
-              >
+              <h3 className="font-bold text-gray-800 text-white">
                 {event?.title} - {formattedDate}
               </h3>
               <button
@@ -125,13 +127,13 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
             </div>
 
             <div className="px-4 py-6">
-              {loading ? (
+              {loaderType ? (
                 <div className="flex items-center justify-center">
                   <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                  Generating event...
+                  {loaderType === "loading" ? "Loading content..." : `Generating content for ${event?.title}`}
                 </div>
               ) : (
-                <div className="prose overflow-y-auto max-h-96 prose-gray max-w-none text-gray-800">
+                <div className="prose overflow-y-scroll max-h-96 prose-gray max-w-none text-gray-800">
                   <ReactMarkdown>
                     {content || ""}
                   </ReactMarkdown>

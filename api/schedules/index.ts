@@ -97,7 +97,7 @@ const getSchedule = async (req, res) => {
       `SELECT 
          s.title, 
          s.events, 
-         s.requires_additional_content AS requiresAdditionalContent, 
+         s.requires_additional_content AS "requiresAdditionalContent", 
          s.uuid, 
          s.created
        FROM schedules s

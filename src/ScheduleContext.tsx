@@ -1,10 +1,12 @@
+// ScheduleContext.tsx
 import React, { createContext, useContext, useState } from 'react';
 import Settings from './Settings';
-import { Schedule } from './types';
+import { Schedule, ScheduleEvent } from './types';
 import { toast } from 'react-toastify';
 
 type ScheduleContextType = {
   schedule: Schedule | null;
+  setSchedule: React.Dispatch<React.SetStateAction<Schedule | null>>;
   mySchedules: Schedule[];
   loading: boolean;
   error: string | null;
@@ -12,15 +14,18 @@ type ScheduleContextType = {
   addToCalendar: (schedule: Schedule) => Promise<void>;
   downloadICS: (schedule: Schedule) => Promise<void>;
   fetchSchedules: () => Promise<void>;
+  updateEvent: (
+    uuid: string,
+    id: number,
+    updatedEvent: Partial<ScheduleEvent>
+  ) => Promise<ScheduleEvent>;
   addLoading: boolean;
   downloadLoading: boolean;
 };
 
 const ScheduleContext = createContext<ScheduleContextType | undefined>(undefined);
 
-export const ScheduleProvider: React.FC<{ 
-  children: React.ReactNode; 
-}> = ({ children }) => {
+export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [mySchedules, setMySchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,6 +33,7 @@ export const ScheduleProvider: React.FC<{
   const [addLoading, setAddLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
 
+  // Create a schedule based on a query string.
   const createSchedule = async (query: string) => {
     setLoading(true);
     setError(null);
@@ -35,7 +41,7 @@ export const ScheduleProvider: React.FC<{
       const res = await fetch(`${Settings.API_URL}/suggest?type=suggest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: query })
+        body: JSON.stringify({ text: query }),
       });
       if (!res.ok) throw new Error('Failed to get events');
       const data = await res.json();
@@ -48,6 +54,7 @@ export const ScheduleProvider: React.FC<{
     }
   };
 
+  // Helper functions to generate ICS file content.
   const formatDateToICS = (dateString: string): string => {
     const date = new Date(dateString);
     const pad = (num: number) => (num < 10 ? "0" + num : num);
@@ -85,33 +92,32 @@ export const ScheduleProvider: React.FC<{
     return icsContent;
   };
 
+  // Save the schedule and add it to the user's Google Calendar.
   const addToCalendar = async (schedule: Schedule) => {
     if (!schedule) return;
-
     setAddLoading(true);
-    
     try {
-      // Save the schedule in your DB
+      // Save the schedule in your DB.
       const createScheduleResponse = await fetch(`${Settings.API_URL}/schedules`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(schedule)
+        body: JSON.stringify(schedule),
       });
-
       if (!createScheduleResponse.ok) throw new Error('Failed to save schedule');
-
       const createScheduleResponseJSON = await createScheduleResponse.json();
-
       schedule.uuid = createScheduleResponseJSON.uuid;
 
-      const addScheduleToGoogleCalendarResponse = await fetch(`${Settings.API_URL}/google?type=add-schedule`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(schedule),
-        credentials: 'include'
-      });
-      
+      // Add schedule to Google Calendar.
+      const addScheduleToGoogleCalendarResponse = await fetch(
+        `${Settings.API_URL}/google?type=add-schedule`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(schedule),
+          credentials: 'include',
+        }
+      );
       if (!addScheduleToGoogleCalendarResponse.ok) throw new Error('Failed to add events to calendar');
 
       toast(`${schedule.title} was successfully added to your calendar!`);
@@ -123,6 +129,7 @@ export const ScheduleProvider: React.FC<{
     }
   };
 
+  // Generate and download an ICS file.
   const downloadICS = async (sch: Schedule) => {
     if (!sch) return;
     setDownloadLoading(true);
@@ -138,7 +145,7 @@ export const ScheduleProvider: React.FC<{
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      // Save schedule to your DB (if needed)
+      // Optionally, save schedule to your DB.
       await fetch(`${Settings.API_URL}/schedules`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -153,7 +160,7 @@ export const ScheduleProvider: React.FC<{
     }
   };
 
-  // New function to fetch schedules (moved from the previous useEffect)
+  // Fetch all schedules for the current user.
   const fetchSchedules = async () => {
     setLoading(true);
     setError(null);
@@ -161,7 +168,7 @@ export const ScheduleProvider: React.FC<{
       const response = await fetch(`${Settings.API_URL}/schedules`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch schedules');
       const data = await response.json();
@@ -173,19 +180,55 @@ export const ScheduleProvider: React.FC<{
     }
   };
 
+  // Update an event in the schedule's events array.
+  const updateEvent = async (
+    uuid: string, 
+    id: number, 
+    updatedEvent: Partial<ScheduleEvent>
+  ): Promise<ScheduleEvent> => {
+    try {
+      const response = await fetch(`${Settings.API_URL}/events?uuid=${uuid}&id=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updatedEvent),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update event');
+      }
+      const data = await response.json();
+      const updated = data.event;
+      
+      // Update the schedule state if it exists.
+      if (schedule) {
+        const updatedEvents = schedule.events.map((e: ScheduleEvent) =>
+          e.id === id ? updated : e
+        );
+        setSchedule({ ...schedule, events: updatedEvents });
+      }
+      return updated;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
   return (
-    <ScheduleContext.Provider value={{
-      schedule,
-      mySchedules,
-      loading,
-      error,
-      createSchedule,
-      addToCalendar,
-      downloadICS,
-      fetchSchedules,
-      addLoading,
-      downloadLoading
-    }}>
+    <ScheduleContext.Provider
+      value={{
+        schedule,
+        setSchedule,
+        mySchedules,
+        loading,
+        error,
+        createSchedule,
+        addToCalendar,
+        downloadICS,
+        fetchSchedules,
+        updateEvent,
+        addLoading,
+        downloadLoading,
+      }}
+    >
       {children}
     </ScheduleContext.Provider>
   );
@@ -198,3 +241,5 @@ export const useScheduleContext = () => {
   }
   return context;
 };
+
+export default ScheduleContext;

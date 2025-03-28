@@ -1,4 +1,5 @@
-const PrivacyAgreement: React.FC = () => {
+const PrivacyAgreementPage: React.FC = () => {
+  
   return (
     <div className="relative overflow-hidden relative bg-white">
       <div className="max-w-[85rem] min-h-[40rem] mx-auto px-4 sm:px-6 lg:px-8 text-left">
@@ -166,4 +167,4 @@ const PrivacyAgreement: React.FC = () => {
   );
 };
 
-export default PrivacyAgreement;
+export default PrivacyAgreementPage;

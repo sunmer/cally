@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Download, Loader2 } from "lucide-react";
-import IconGoogleCalendar from "./assets/icon-google-calendar.svg?react";
-import { useScheduleContext } from './ScheduleContext';
-import { useAuth } from './AuthContext';
-import ModalScheduleItem from './components/ModalScheduleEvent';
+import IconGoogleCalendar from "../assets/icon-google-calendar.svg?react";
+import { useScheduleContext } from '../ScheduleContext';
+import { useAuth } from '../AuthContext';
+import ModalScheduleItem from './ModalScheduleEvent';
 
 const SuggestedSchedule: React.FC = () => {
   const { schedule, addToCalendar, downloadICS, addLoading, downloadLoading } = useScheduleContext();
