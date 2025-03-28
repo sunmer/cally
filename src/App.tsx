@@ -4,6 +4,8 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import PrivacyAgreement from './PrivacyAgreement';
 import LandingPage from './LandingPage';
+import ScheduleEvent from './ScheduleEvent';
+import { ScheduleProvider } from './ScheduleContext';
 
 
 function AppContent() {
@@ -30,6 +32,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/privacy-agreement" element={<PrivacyAgreement />} />
+          <Route path="/events/:uuid/:id" element={<ScheduleEvent />} />
         </Routes>
 
         <Footer />
@@ -41,7 +44,9 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <ScheduleProvider>
+        <AppContent />
+      </ScheduleProvider>
     </Router>
   );
 }

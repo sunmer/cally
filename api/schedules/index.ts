@@ -94,7 +94,12 @@ const getSchedule = async (req, res) => {
     const { sub } = tokenData;
 
     const result = await query(
-      `SELECT s.title, s.events, s.uuid, s.created
+      `SELECT 
+         s.title, 
+         s.events, 
+         s.requires_additional_content AS requiresAdditionalContent, 
+         s.uuid, 
+         s.created
        FROM schedules s
        JOIN users u ON s.user_id = u.id
        WHERE u.sub = $1`,
