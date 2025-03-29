@@ -3,49 +3,25 @@ export const config = {
 };
 
 const systemPrompt = `
-You are a helpful calendar assistant. Generate a valid JSON response based on the user's request. The JSON must include:
-
-- "title": a concise description (max 3 words)
-- "requiresAdditionalContent": a boolean flag that is true if the schedule requires extra LLM-generated content (such as detailed guidance or educational materials) and false if it is a simple routine.
-- "events": an array of event objects, each containing:
-   - "title": the event title. If "requiresAdditionalContent" is true, generate a realistic and specific title that accurately reflects the event's subject; avoid generic placeholders.
-   - "description": a baseline event description. For events where "requiresAdditionalContent" is true, this should be succinct to serve as a placeholder for later content generation. Otherwise, it can be more detailed.
-   - "start": start datetime in ISO 8601 format (e.g., "2025-03-25T09:00:00Z")
-   - "end": end datetime in ISO 8601 format
-
-Important scheduling rules:
+You are a helpful calendar assistant. Generate newline-delimited JSON (NDJSON) where each line is a valid JSON object.
+For each event (not the final summary), output a JSON object with:
+  - "title": a concise event title (max 3 words if it’s the summary, or a realistic event title if additional content is needed)
+  - "description": a brief description (if extra content is needed, keep it succinct)
+  - "start": start datetime in ISO 8601 format (exactly on the hour or half past)
+  - "end": end datetime in ISO 8601 format
+When all events are generated, output one final JSON object with a "title", "requiresAdditionalContent", and an "events" array that contains all events.
+Important rules:
 1. Each event must have a realistic duration (no less than 15 minutes and no longer than 8 hours).
-2. Event start and end times must be distinct.
-3. If a specific date is not provided, use tomorrow’s date as the base date.
-4. For multiple events, ensure they do not overlap and are reasonably spaced.
-5. For recurring or multi-day challenges, generate separate event entries for each occurrence with appropriate spacing.
-6. Determine "requiresAdditionalContent" by assessing the complexity of the request:
-   - Use false for straightforward or routine challenges.
-   - Use true if the request implies extra guidance or dynamic instructions; in this case, generate specific, realistic event titles and keep descriptions succinct.
-7. Ensure that all event "start" times are exactly at the hour (e.g., "09:00:00Z") or half past the hour (e.g., "09:30:00Z").
-
-Example generalized response format:
-{
-  "title": "Concise Title",
-  "requiresAdditionalContent": true,
-  "events": [
-    {
-      "title": "Specific Event Title",
-      "description": "Brief description",
-      "start": "2025-03-25T09:00:00Z",
-      "end": "2025-03-25T10:30:00Z"
-    }
-  ]
-}
+2. Use tomorrow’s date (provided in the prompt) if no specific date is given.
+3. Ensure events do not overlap and that times are exactly at the hour or half past.
 `.trim();
 
-export default async function handler(req: Request) {
-  // Use POST since we expect a JSON body with a "text" property.
+export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
   }
 
-  let text: string;
+  let text;
   try {
     const body = await req.json();
     text = body.text;
@@ -59,7 +35,7 @@ export default async function handler(req: Request) {
     return new Response('Invalid JSON', { status: 400 });
   }
 
-  // Replace the placeholder with tomorrow's date.
+  // Replace placeholder with tomorrow’s date.
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const isoTomorrow = tomorrow.toISOString();
@@ -70,7 +46,6 @@ export default async function handler(req: Request) {
     { role: 'user', content: text },
   ];
 
-  // Call the OpenAI API with streaming enabled.
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -82,7 +57,7 @@ export default async function handler(req: Request) {
       messages,
       stream: true,
       temperature: 0,
-      response_format: { "type": "json_object" },
+      response_format: { "type": "json_object" }
     }),
   });
 
@@ -90,16 +65,50 @@ export default async function handler(req: Request) {
     return new Response('Failed to connect to OpenAI', { status: 500 });
   }
 
-  // Stream the raw chunks directly to the client without parsing them.
+  // Transform the OpenAI stream into an NDJSON stream
   const stream = new ReadableStream({
     async start(controller) {
-      // We know response.body is not null from the check above
+      // We already checked response.body is not null above
       const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          controller.enqueue(value);
+          buffer += decoder.decode(value, { stream: true });
+          // Split the buffered text into lines
+          const lines = buffer.split("\n");
+          // Process complete lines (except the last, which might be incomplete)
+          for (let i = 0; i < lines.length - 1; i++) {
+            let line = lines[i].trim();
+            if (line) {
+              // Remove any leading "data:" if present
+              const cleanedLine = line.replace(/^data:\s*/, '');
+              if (cleanedLine === "[DONE]") continue;
+              // Try to parse the line to ensure it’s a complete JSON object
+              try {
+                JSON.parse(cleanedLine);
+                // Enqueue the complete NDJSON line
+                controller.enqueue(new TextEncoder().encode(cleanedLine + "\n"));
+              } catch (e) {
+                // If parsing fails, wait for more data before emitting this line
+              }
+            }
+          }
+          // Keep the last partial line in the buffer
+          buffer = lines[lines.length - 1];
+        }
+        // Process any final buffered data
+        if (buffer.trim()) {
+          try {
+            const cleanedLine = buffer.replace(/^data:\s*/, '').trim();
+            JSON.parse(cleanedLine);
+            controller.enqueue(new TextEncoder().encode(cleanedLine + "\n"));
+          } catch (e) {
+            console.error("Final JSON parse error:", e);
+          }
         }
         controller.close();
       } catch (err) {
@@ -111,7 +120,7 @@ export default async function handler(req: Request) {
 
   return new Response(stream, {
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-ndjson',
     },
   });
 }

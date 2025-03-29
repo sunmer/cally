@@ -37,41 +37,61 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const createSchedule = async (query: string) => {
     setLoading(true);
     setError(null);
-    setSchedule(null); // Clear previous schedule
+    // Initialize an empty schedule object to accumulate events.
+    setSchedule({ title: '', requiresAdditionalContent: false, events: [] });
     try {
       const res = await fetch(`${Settings.API_URL}/suggest/calendar`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ text: query }),
       });
-  
+
       if (!res.ok || !res.body) throw new Error('Failed to get events');
-  
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let partialData = '';
-  
+      let buffer = '';
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        partialData += decoder.decode(value, { stream: true });
-        console.log(partialData)
-        // Attempt to parse the JSON object from the streamed data
-        try {
-          const jsonData = JSON.parse(partialData);
-          setSchedule(jsonData);
-        } catch (e) {
-          // Incomplete JSON, continue accumulating data
+        buffer += decoder.decode(value, { stream: true });
+        // Split the buffer into complete lines
+        const lines = buffer.split("\n");
+        for (let i = 0; i < lines.length - 1; i++) {
+          const line = lines[i].trim();
+          if (line) {
+            try {
+              const jsonData = JSON.parse(line);
+              // If this object has an "events" array, consider it the final summary
+              if (jsonData.events && Array.isArray(jsonData.events)) {
+                setSchedule(jsonData);
+              } else {
+                // Otherwise, assume it’s an individual event and append it to the schedule
+                setSchedule(prev => {
+                  if (prev) {
+                    return { ...prev, events: [...prev.events, jsonData] };
+                  }
+                  return { title: '', requiresAdditionalContent: false, events: [jsonData] };
+                });
+              }
+            } catch (e) {
+              console.error('Error parsing line:', e);
+            }
+          }
         }
+        // Keep any incomplete line for the next iteration.
+        buffer = lines[lines.length - 1];
       }
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
 
   // Helper functions to generate ICS file content.
   const formatDateToICS = (dateString: string): string => {
@@ -163,7 +183,7 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       // Optionally, save schedule to your DB.
       await fetch(`${Settings.API_URL}/schedules`, {
         method: "POST",
@@ -201,8 +221,8 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Update an event in the schedule's events array.
   const updateEvent = async (
-    uuid: string, 
-    id: number, 
+    uuid: string,
+    id: number,
     updatedEvent: Partial<ScheduleEvent>
   ): Promise<ScheduleEvent> => {
     try {
@@ -217,7 +237,7 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       const data = await response.json();
       const updated = data.event;
-      
+
       // Update the schedule state if it exists.
       if (schedule) {
         const updatedEvents = schedule.events.map((e: ScheduleEvent) =>
