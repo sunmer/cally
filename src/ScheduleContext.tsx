@@ -1,4 +1,3 @@
-import { createParser } from 'eventsource-parser';
 import React, { createContext, useContext, useState } from 'react';
 import Settings from './Settings';
 import { Schedule, ScheduleEvent } from './types';
