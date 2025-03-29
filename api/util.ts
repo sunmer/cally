@@ -30,11 +30,16 @@ export function getGoogleTokenFromCookie(req): GoogleTokenResponse | null {
 }
 
 export const allowCors = fn => async (req, res) => {
-  const allowedOrigins = [
-    'http://localhost:5173',
+  let allowedOrigins = [
     'https://calera.io',
     'https://www.calera.io'
   ];
+
+  const isProd = process.env.VERCEL_ENV === 'production';
+
+  if(!isProd) {
+    allowedOrigins.push('http://localhost:5173')
+  }
 
   // Get the origin of the incoming request
   const origin = req.headers.origin;

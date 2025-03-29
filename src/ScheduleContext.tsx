@@ -1,4 +1,4 @@
-// ScheduleContext.tsx
+import { createParser } from 'eventsource-parser';
 import React, { createContext, useContext, useState } from 'react';
 import Settings from './Settings';
 import { Schedule, ScheduleEvent } from './types';
@@ -34,64 +34,134 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [downloadLoading, setDownloadLoading] = useState(false);
 
   // Create a schedule based on a query string.
-  const createSchedule = async (query: string) => {
-    setLoading(true);
-    setError(null);
-    // Initialize an empty schedule object to accumulate events.
-    setSchedule({ title: '', requiresAdditionalContent: false, events: [] });
-    try {
-      const res = await fetch(`${Settings.API_URL}/suggest/calendar`, {
-        method: 'POST',
+  // In your ScheduleContext.tsx
+
+const createSchedule = async (query: string) => {
+  setLoading(true);
+  setError(null);
+  
+  // Initialize with empty schedule structure
+  setSchedule({ 
+    title: '', 
+    requiresAdditionalContent: false, 
+    events: [] 
+  });
+
+  try {
+    const res = await fetch(
+      `${Settings.API_URL}/suggest/calendar?text=${encodeURIComponent(query)}`,
+      {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text: query }),
-      });
+      }
+    );
 
-      if (!res.ok || !res.body) throw new Error('Failed to get events');
+    if (!res.ok || !res.body) throw new Error('Failed to get events');
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+    // Set up stream parsing
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    
+    let buffer = '';
+    let processedEventTitles = new Set<string>();
+    
+    const processBuffer = () => {
+      // First, try to extract title and requiresAdditionalContent
+      const titleMatch = buffer.match(/"title"\s*:\s*"([^"]+)"/);
+      const requiresMatch = buffer.match(/"requiresAdditionalContent"\s*:\s*(true|false)/);
+      
+      if (titleMatch && requiresMatch) {
+        setSchedule(prevSchedule => {
+          if (!prevSchedule) return prevSchedule;
+          
+          return {
+            ...prevSchedule,
+            title: titleMatch[1],
+            requiresAdditionalContent: requiresMatch[1] === 'true'
+          };
+        });
+      }
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        // Split the buffer into complete lines
-        const lines = buffer.split("\n");
-        for (let i = 0; i < lines.length - 1; i++) {
-          const line = lines[i].trim();
-          if (line) {
-            try {
-              const jsonData = JSON.parse(line);
-              // If this object has an "events" array, consider it the final summary
-              if (jsonData.events && Array.isArray(jsonData.events)) {
-                setSchedule(jsonData);
-              } else {
-                // Otherwise, assume it’s an individual event and append it to the schedule
-                setSchedule(prev => {
-                  if (prev) {
-                    return { ...prev, events: [...prev.events, jsonData] };
-                  }
-                  return { title: '', requiresAdditionalContent: false, events: [jsonData] };
-                });
+      // For debugging
+      console.log("Processing buffer chunk:", buffer.length);
+    
+      // Now look for events in the form {"id":1,...}
+      const eventRegex = /{[^{}]*"title"[^{}]*"start"[^{}]*"end"[^{}]*}/g;
+      const eventMatches = [...buffer.matchAll(eventRegex)];
+      
+      if (eventMatches.length > 0) {
+        console.log(`Found ${eventMatches.length} potential events in this chunk`);
+        
+        for (const match of eventMatches) {
+          try {
+            const eventJson = match[0];
+            const eventObj = JSON.parse(eventJson);
+
+            // Validate it's an event object
+            if (eventObj.title && eventObj.start && eventObj.end) {
+              console.log("Found valid event:", eventObj.title);
+              
+              // Check if we've already processed this event
+              if (!processedEventTitles.has(eventObj.title)) {
+                processedEventTitles.add(eventObj.title);
+                
+                // Force a render by updating outside of the batch
+                setTimeout(() => {
+                  setSchedule(prevSchedule => {
+                    if (!prevSchedule) return prevSchedule;
+                    
+                    console.log("Adding event to schedule:", eventObj.title);
+                    return {
+                      ...prevSchedule,
+                      events: [...(prevSchedule.events || []), eventObj]
+                    };
+                  });
+                }, 0);
               }
-            } catch (e) {
-              console.error('Error parsing line:', e);
             }
+          } catch (e) {
+            console.error("Error parsing event:", e);
           }
         }
-        // Keep any incomplete line for the next iteration.
-        buffer = lines[lines.length - 1];
       }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      
+      // Remove complete event objects we've already processed to avoid duplicates
+      eventMatches.forEach(match => {
+        const index = buffer.indexOf(match[0]);
+        if (index !== -1) {
+          buffer = buffer.substring(0, index) + buffer.substring(index + match[0].length);
+        }
+      });
+    };
+    
+    // Process the stream
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        console.log("Stream complete");
+        // Process any remaining data
+        processBuffer();
+        break;
+      }
+      
+      // Add new chunk to buffer
+      const chunk = decoder.decode(value, { stream: true });
+      buffer += chunk;
+      console.log("Received chunk, buffer size:", buffer.length);
+      
+      // Process the current buffer
+      processBuffer();
     }
-  };
-
+    
+  } catch (err: any) {
+    console.error("Error in createSchedule:", err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Helper functions to generate ICS file content.
   const formatDateToICS = (dateString: string): string => {

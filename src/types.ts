@@ -3,7 +3,7 @@ export type ScheduleEvent = {
   title: string;
   description: string;
   content: string;
-  questions: string[];
+  questions?: string[];
   start: string;
   end: string;
 };
