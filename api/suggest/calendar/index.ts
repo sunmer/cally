@@ -78,7 +78,7 @@ export default async function handler(req: Request) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4-1106-preview', // Ensure this model supports JSON mode
+      model: 'gpt-4o-mini-2024-07-18', // Ensure this model supports JSON mode
       messages,
       stream: true,
       temperature: 0,
@@ -94,7 +94,7 @@ export default async function handler(req: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       // We know response.body is not null from the check above
-      const reader = (response.body as ReadableStream).getReader();
+      const reader = response.body!.getReader();
       try {
         while (true) {
           const { done, value } = await reader.read();

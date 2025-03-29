@@ -39,9 +39,11 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setError(null);
     setSchedule(null); // Clear previous schedule
     try {
-      const res = await fetch(`${Settings.API_URL}/suggest?type=suggest`, {
+      const res = await fetch(`${Settings.API_URL}/suggest/calendar`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'text/plain',
+        },
         body: JSON.stringify({ text: query }),
       });
   
@@ -55,7 +57,7 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const { value, done } = await reader.read();
         if (done) break;
         partialData += decoder.decode(value, { stream: true });
-  
+        console.log(partialData)
         // Attempt to parse the JSON object from the streamed data
         try {
           const jsonData = JSON.parse(partialData);
