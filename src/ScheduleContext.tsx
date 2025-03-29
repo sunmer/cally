@@ -37,17 +37,34 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const createSchedule = async (query: string) => {
     setLoading(true);
     setError(null);
+    setSchedule(null); // Clear previous schedule
     try {
       const res = await fetch(`${Settings.API_URL}/suggest?type=suggest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: query }),
       });
-      if (!res.ok) throw new Error('Failed to get events');
-      const data = await res.json();
-      const scheduleData: Schedule = JSON.parse(data.choices[0].message.content);
-      setSchedule(scheduleData);
-    } catch (err: any) {
+  
+      if (!res.ok || !res.body) throw new Error('Failed to get events');
+  
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let partialData = '';
+  
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        partialData += decoder.decode(value, { stream: true });
+  
+        // Attempt to parse the JSON object from the streamed data
+        try {
+          const jsonData = JSON.parse(partialData);
+          setSchedule(jsonData);
+        } catch (e) {
+          // Incomplete JSON, continue accumulating data
+        }
+      }
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
