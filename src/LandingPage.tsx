@@ -18,22 +18,24 @@ import MySchedules from './components/MySchedules';
 
 function LandingPage() {
   const { isAuthenticated, login, loading: isAuthenticationLoading } = useAuth();
-  const { schedule, createSchedule, setSchedule, fetchSchedules } = useScheduleContext();
+  const { suggestSchedule, setSchedule, fetchSchedules, addScheduleToCalendar } = useScheduleContext();
   const [query, setQuery] = useState('');
   const [createScheduleLoading, setCreateScheduleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'create' | 'myschedules'>('create');
 
-  // Check for a pending schedule after OAuth redirect
   useEffect(() => {
-    if (isAuthenticated && !schedule) {
+    const addPendingSchedule = async () => {
       const storedSchedule = localStorage.getItem("pendingSchedule");
-      if (storedSchedule) {
+      if (isAuthenticated && storedSchedule) {
         const scheduleFromStorage: Schedule = JSON.parse(storedSchedule);
-        // Instead of calling createSchedule again, just set the schedule
+        
         setSchedule(scheduleFromStorage);
+        await addScheduleToCalendar(scheduleFromStorage);
         localStorage.removeItem("pendingSchedule");
       }
-    }
+    };
+  
+    addPendingSchedule();
   }, [isAuthenticated]);
 
   // When the active tab is "myschedules", fetch the schedules
@@ -55,7 +57,7 @@ function LandingPage() {
     if (query.length < 6) return;
     setCreateScheduleLoading(true);
     try {
-      await createSchedule(query);
+      await suggestSchedule(query);
     } catch (err: any) {
       console.error(err);
     } finally {

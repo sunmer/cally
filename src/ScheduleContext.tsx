@@ -9,8 +9,8 @@ type ScheduleContextType = {
   mySchedules: Schedule[];
   loading: boolean;
   error: string | null;
-  createSchedule: (query: string) => Promise<void>;
-  addToCalendar: (schedule: Schedule) => Promise<void>;
+  suggestSchedule: (query: string) => Promise<void>;
+  addScheduleToCalendar: (schedule: Schedule) => Promise<void>;
   downloadICS: (schedule: Schedule) => Promise<void>;
   fetchSchedules: () => Promise<void>;
   updateEvent: (
@@ -18,8 +18,6 @@ type ScheduleContextType = {
     id: number,
     updatedEvent: Partial<ScheduleEvent>
   ) => Promise<ScheduleEvent>;
-  addLoading: boolean;
-  downloadLoading: boolean;
 };
 
 const ScheduleContext = createContext<ScheduleContextType | undefined>(undefined);
@@ -29,134 +27,164 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [mySchedules, setMySchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [addLoading, setAddLoading] = useState(false);
-  const [downloadLoading, setDownloadLoading] = useState(false);
 
   // Create a schedule based on a query string.
   // In your ScheduleContext.tsx
 
-const createSchedule = async (query: string) => {
-  setLoading(true);
-  setError(null);
-  
-  // Initialize with empty schedule structure
-  setSchedule({ 
-    title: '', 
-    requiresAdditionalContent: false, 
-    events: [] 
-  });
+  const suggestSchedule = async (query: string) => {
+    setLoading(true);
+    setError(null);
 
-  try {
-    const res = await fetch(
-      `${Settings.API_URL}/suggest/calendar?text=${encodeURIComponent(query)}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    // Initialize with empty schedule structure
+    setSchedule({
+      title: '',
+      requiresAdditionalContent: false,
+      events: []
+    });
 
-    if (!res.ok || !res.body) throw new Error('Failed to get events');
+    try {
+      const res = await fetch(
+        `${Settings.API_URL}/suggest/calendar?text=${encodeURIComponent(query)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-    // Set up stream parsing
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    
-    let buffer = '';
-    let processedEventTitles = new Set<string>();
-    
-    const processBuffer = () => {
-      // First, try to extract title and requiresAdditionalContent
-      const titleMatch = buffer.match(/"title"\s*:\s*"([^"]+)"/);
-      const requiresMatch = buffer.match(/"requiresAdditionalContent"\s*:\s*(true|false)/);
-      
-      if (titleMatch && requiresMatch) {
-        setSchedule(prevSchedule => {
-          if (!prevSchedule) return prevSchedule;
-          
-          return {
-            ...prevSchedule,
-            title: titleMatch[1],
-            requiresAdditionalContent: requiresMatch[1] === 'true'
-          };
-        });
-      }
+      if (!res.ok || !res.body) throw new Error('Failed to get events');
 
-      // Now look for events in the form {"id":1,...}
-      const eventRegex = /{[^{}]*"title"[^{}]*"start"[^{}]*"end"[^{}]*}/g;
-      const eventMatches = [...buffer.matchAll(eventRegex)];
-      
-      if (eventMatches.length > 0) {
-        console.log(`Found ${eventMatches.length} potential events in this chunk`);
-        
-        for (const match of eventMatches) {
-          try {
-            const eventJson = match[0];
-            const eventObj = JSON.parse(eventJson);
+      // Set up stream parsing
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
 
-            // Validate it's an event object
-            if (eventObj.title && eventObj.start && eventObj.end) {
-              console.log("Found valid event:", eventObj.title);
-              
-              // Check if we've already processed this event
-              if (!processedEventTitles.has(eventObj.title)) {
-                processedEventTitles.add(eventObj.title);
-                
-                // Force a render by updating outside of the batch
-                setTimeout(() => {
-                  setSchedule(prevSchedule => {
-                    if (!prevSchedule) return prevSchedule;
-                    
-                    console.log("Adding event to schedule:", eventObj.title);
-                    return {
-                      ...prevSchedule,
-                      events: [...(prevSchedule.events || []), eventObj]
-                    };
-                  });
-                }, 0);
-              }
-            }
-          } catch (e) {
-            console.error("Error parsing event:", e);
+      let buffer = '';
+      let processedEventIds = new Set<string>();
+      let scheduleTitle = '';
+      let requiresAdditionalContent = false;
+      let allEvents: any[] = [];
+
+      const processBuffer = () => {
+        // Try to extract title and requiresAdditionalContent if not already found
+        if (!scheduleTitle) {
+          const titleMatch = buffer.match(/"title"\s*:\s*"([^"]+)"/);
+          if (titleMatch) {
+            scheduleTitle = titleMatch[1];
           }
         }
-      }
-      
-      // Remove complete event objects we've already processed to avoid duplicates
-      eventMatches.forEach(match => {
-        const index = buffer.indexOf(match[0]);
-        if (index !== -1) {
-          buffer = buffer.substring(0, index) + buffer.substring(index + match[0].length);
+
+        if (requiresAdditionalContent === false) {
+          const requiresMatch = buffer.match(/"requiresAdditionalContent"\s*:\s*(true|false)/);
+          if (requiresMatch) {
+            requiresAdditionalContent = requiresMatch[1] === 'true';
+          }
         }
-      });
-    };
-    
-    // Process the stream
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) {
-        console.log("Stream complete");
-        // Process any remaining data
+
+        // If we have title and requiresAdditionalContent, update the schedule
+        if (scheduleTitle && requiresAdditionalContent !== undefined) {
+          setSchedule(prevSchedule => {
+            if (!prevSchedule) return prevSchedule;
+            return {
+              ...prevSchedule,
+              title: scheduleTitle,
+              requiresAdditionalContent
+            };
+          });
+        }
+
+        // Look for complete event objects
+        // This regex is more strict to ensure we get complete JSON objects
+        const eventRegex = /{[^{}]*"title"[^{}]*"start"[^{}]*"end"[^{}]*}/g;
+        const eventMatches = [...buffer.matchAll(eventRegex)];
+
+        let newEvents: any[] = [];
+
+        if (eventMatches.length > 0) {
+          console.log(`Found ${eventMatches.length} potential events in this chunk`);
+
+          for (const match of eventMatches) {
+            try {
+              const eventJson = match[0];
+              const eventObj = JSON.parse(eventJson);
+
+              // Validate it's an event object
+              if (eventObj.title && eventObj.start && eventObj.end) {
+                // Create a unique identifier using all event properties
+                const eventId = `${eventObj.title}-${eventObj.start}-${eventObj.end}`;
+
+                // Check if we've already processed this event
+                if (!processedEventIds.has(eventId)) {
+                  processedEventIds.add(eventId);
+                  console.log("Found new event:", eventObj.title);
+                  newEvents.push(eventObj);
+                  allEvents.push(eventObj);
+                }
+              }
+            } catch (e) {
+              console.error("Error parsing event:", e, match[0]);
+            }
+          }
+
+          // Batch update with all new events
+          if (newEvents.length > 0) {
+            setSchedule(prevSchedule => {
+              if (!prevSchedule) return prevSchedule;
+              return {
+                ...prevSchedule,
+                events: [...allEvents]
+              };
+            });
+          }
+        }
+
+        // Clean up buffer by removing completely processed events
+        eventMatches.forEach(match => {
+          const index = buffer.indexOf(match[0]);
+          if (index !== -1) {
+            buffer = buffer.substring(0, index) + buffer.substring(index + match[0].length);
+          }
+        });
+      };
+
+      // Process the stream
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          console.log("Stream complete, final event count:", allEvents.length);
+          // Process any remaining data
+          processBuffer();
+
+          // Final update to ensure all events are included
+          setSchedule(prevSchedule => {
+            if (!prevSchedule) return prevSchedule;
+            return {
+              ...prevSchedule,
+              title: scheduleTitle || prevSchedule.title,
+              requiresAdditionalContent: requiresAdditionalContent !== undefined ? requiresAdditionalContent : prevSchedule.requiresAdditionalContent,
+              events: allEvents
+            };
+          });
+          break;
+        }
+
+        // Add new chunk to buffer
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+
+        console.log("Received chunk:", chunk.length, "bytes");
+
+        // Process the current buffer
         processBuffer();
-        break;
       }
-      
-      // Add new chunk to buffer
-      const chunk = decoder.decode(value, { stream: true });
-      buffer += chunk;
-      
-      // Process the current buffer
-      processBuffer();
+
+    } catch (err: any) {
+      console.error("Error in suggestSchedule:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    
-  } catch (err: any) {
-    console.error("Error in createSchedule:", err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Helper functions to generate ICS file content.
   const formatDateToICS = (dateString: string): string => {
@@ -197,9 +225,12 @@ const createSchedule = async (query: string) => {
   };
 
   // Save the schedule and add it to the user's Google Calendar.
-  const addToCalendar = async (schedule: Schedule) => {
+  const addScheduleToCalendar = async (schedule: Schedule) => {
     if (!schedule) return;
-    setAddLoading(true);
+
+    toast(`Adding ${schedule.title} to your Google calendar...`);
+    setLoading(true);
+
     try {
       // Save the schedule in your DB.
       const createScheduleResponse = await fetch(`${Settings.API_URL}/schedules`, {
@@ -229,21 +260,22 @@ const createSchedule = async (query: string) => {
       console.error("Error adding events to calendar:", err);
       throw err;
     } finally {
-      setAddLoading(false);
+      setLoading(false);
     }
   };
 
   // Generate and download an ICS file.
-  const downloadICS = async (sch: Schedule) => {
-    if (!sch) return;
-    setDownloadLoading(true);
+  const downloadICS = async (schedule: Schedule) => {
+    if (!schedule) return;
+
+    setLoading(true);
     try {
-      const icsString = generateICS(sch);
+      const icsString = generateICS(schedule);
       const blob = new Blob([icsString], { type: "text/calendar;charset=utf-8" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${sch.title.replace(/\s+/g, "_")}.ics`;
+      link.download = `${schedule.title.replace(/\s+/g, "_")}.ics`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -254,13 +286,13 @@ const createSchedule = async (query: string) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(sch),
+        body: JSON.stringify(schedule),
       });
     } catch (err: any) {
       console.error("Error downloading ICS:", err);
       throw err;
     } finally {
-      setDownloadLoading(false);
+      setLoading(false);
     }
   };
 
@@ -324,13 +356,11 @@ const createSchedule = async (query: string) => {
         mySchedules,
         loading,
         error,
-        createSchedule,
-        addToCalendar,
+        suggestSchedule,
+        addScheduleToCalendar: addScheduleToCalendar,
         downloadICS,
         fetchSchedules,
         updateEvent,
-        addLoading,
-        downloadLoading,
       }}
     >
       {children}

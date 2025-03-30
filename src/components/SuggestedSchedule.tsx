@@ -6,10 +6,13 @@ import { useAuth } from '../AuthContext';
 import ModalScheduleItem from './ModalScheduleEvent';
 
 const SuggestedSchedule: React.FC = () => {
-  const { schedule, addToCalendar, downloadICS, addLoading, downloadLoading } = useScheduleContext();
+  const { schedule, addScheduleToCalendar: addToCalendar, downloadICS } = useScheduleContext();
   const { isAuthenticated, login } = useAuth();
   const [isModalScheduleEventOpen, setIsModalScheduleEventOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+
+  const [addToCalendarLoading, setAddToCalendarLoading] = useState(false);
+  const [downloadICSLoading, setDownloadICSLoading] = useState(false);
 
   if (!schedule || schedule.events.length === 0) return null;
 
@@ -22,6 +25,39 @@ const SuggestedSchedule: React.FC = () => {
     setIsModalScheduleEventOpen(true);
   };
 
+  const handleAddToCalendar = async () => {
+    setAddToCalendarLoading(true);
+    
+    if (!isAuthenticated) {
+      localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
+      login();
+      return;
+    }
+    try {
+      await addToCalendar(schedule);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAddToCalendarLoading(false);
+    }
+  };
+
+  const handleDownloadICS = async () => {
+    if (!isAuthenticated) {
+      localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
+      login();
+      return;
+    }
+    setDownloadICSLoading(true);
+    try {
+      await downloadICS(schedule);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDownloadICSLoading(false);
+    }
+  };
+
   return (
     <div className="mt-8 bg-white rounded-lg">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
@@ -31,19 +67,12 @@ const SuggestedSchedule: React.FC = () => {
 
         <div className="flex flex-col md:flex-row gap-2 mt-2 md:mt-0 md:ml-auto mb-4 md:mb-0">
           <button
-            onClick={() => {
-              if (!isAuthenticated) {
-                localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
-                login();
-              } else {
-                addToCalendar(schedule).catch(err => console.error(err));
-              }
-            }}
-            disabled={addLoading}
+            onClick={handleAddToCalendar}
+            disabled={addToCalendarLoading}
             className="inline-flex justify-center items-center gap-x-3 text-center bg-teal-500 hover:bg-teal-600 focus:outline-none border border-transparent text-white text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
           >
             <div className="flex items-center justify-center gap-2">
-              {addLoading ? (
+              {addToCalendarLoading ? (
                 <>
                   Adding to your calendar
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -58,19 +87,12 @@ const SuggestedSchedule: React.FC = () => {
           </button>
 
           <button
-            onClick={() => {
-              if (!isAuthenticated) {
-                localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
-                login();
-              } else {
-                downloadICS(schedule).catch(err => console.error(err));
-              }
-            }}
-            disabled={downloadLoading}
+            onClick={handleDownloadICS}
+            disabled={downloadICSLoading}
             className="inline-flex justify-center items-center gap-x-3 text-center border text-gray-600 text-sm font-medium rounded-full py-3 px-4 disabled:opacity-50"
           >
             <div className="flex items-center justify-center gap-2">
-              {downloadLoading ? (
+              {downloadICSLoading ? (
                 <>
                   Downloading ICS
                   <Loader2 className="w-4 h-4 animate-spin" />

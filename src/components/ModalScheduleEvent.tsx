@@ -4,11 +4,6 @@ import { ScheduleEvent } from '../types';
 import Settings from '../Settings';
 import ReactMarkdown from 'react-markdown';
 
-type GenerateResponse = {
-  content: string;
-  questions: string[];
-}
-
 type ModalScheduleEventProps = {
   isOpened: boolean;
   onClose: () => void;
