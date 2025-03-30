@@ -1,4 +1,3 @@
-// components/ScheduleItem.tsx
 import React, { useEffect, useState } from 'react';
 import { Loader2 } from "lucide-react";
 import { ScheduleEvent } from '../types';
@@ -45,48 +44,95 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
       // If the event already has content, use the "loading content" loader.
       if (event.content) {
         setLoaderType("loading");
-        // Optionally, you can simulate a short delay if you want to show the loader visibly.
         setContent(event.content);
-        setLoaderType(null);
+        setTimeout(() => setLoaderType(null), 100); 
         return;
       }
       
       // Otherwise, use the "generating content" loader and fetch new content.
       setLoaderType("generating");
-      setContent(null);
-
+      setContent("");
+      
+      // Build a query string from event details
+      const params = new URLSearchParams({
+        title: event.title,
+        description: event.description,
+        start: event.start,
+        end: event.end,
+      });      
+    
       try {
-        const res = await fetch(`${Settings.API_URL}/suggest?type=generate`, {
-          method: 'POST',
+        const res = await fetch(`${Settings.API_URL}/suggest/content?${params.toString()}`, {
+          method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(event),
         });
-        if (!res.ok) throw new Error('Failed to generate content');
-
-        const data = await res.json();
-        const messageContent = data?.choices?.[0]?.message?.content || 'No content received.';
-
-        let parsed: GenerateResponse;
-        let finalContent;
-        try {
-          parsed = JSON.parse(messageContent);
-          if (event) {
-            event.content = parsed.content;
-            event.questions = parsed.questions;
-            finalContent = parsed.content;
+        if (!res.ok || !res.body) throw new Error('Failed to generate content');
+    
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let extractedContent = '';
+        let extractedQuestions: string[] = [];
+        let foundQuestions = false;
+        
+        // Read the stream chunk-by-chunk
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            console.log("Stream complete");
+            break;
           }
-        } catch (err) {
-          console.warn('Could not parse messageContent as JSON:', err);
+          
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+          
+          // Check if we've found the questions marker
+          const questionsMarkerIndex = buffer.indexOf('<<<FOLLOW-UP-QUESTIONS>>>');
+          
+          if (questionsMarkerIndex !== -1 && !foundQuestions) {
+            // Extract the content part (everything before the marker)
+            extractedContent = buffer.substring(0, questionsMarkerIndex).trim();
+            setContent(extractedContent);
+            
+            // Extract questions part
+            const questionsText = buffer.substring(questionsMarkerIndex + '<<<FOLLOW-UP-QUESTIONS>>>'.length);
+            try {
+              // Try to parse JSON array of questions if they exist
+              const questionsMatch = questionsText.match(/\[[\s\S]*\]/);
+              if (questionsMatch) {
+                extractedQuestions = JSON.parse(questionsMatch[0]);
+              }
+            } catch (err) {
+              console.error("Error parsing questions:", err);
+            }
+            
+            foundQuestions = true;
+          } else if (!foundQuestions) {
+            // No questions found yet, update content
+            setContent(buffer);
+            extractedContent = buffer;
+          }
         }
         
-        setContent(finalContent);
+        // Only update the event object once at the end with both properties
+        if (event) {
+          event.content = extractedContent;
+          if (extractedQuestions.length > 0) {
+            event.questions = extractedQuestions;
+          }
+        }
+        
+        // Final state update to ensure UI shows the correct content
+        setContent(extractedContent);
+        
       } catch (err: any) {
         console.error("Error generating content:", err);
         setContent("An error occurred while generating content.");
       } finally {
-        setLoaderType(null);
+        setTimeout(() => setLoaderType(null), 100);
       }
     };
+
 
     if (isOpened && event) {
       generateContent();
@@ -127,18 +173,18 @@ const ModalScheduleEvent: React.FC<ModalScheduleEventProps> = ({
             </div>
 
             <div className="px-4 py-6">
-              {loaderType ? (
-                <div className="flex items-center justify-center">
+              {loaderType && (
+                <div className="flex items-center justify-center mb-4">
                   <Loader2 className="w-6 h-6 animate-spin mr-2" />
                   {loaderType === "loading" ? "Loading content..." : `Generating content for ${event?.title}`}
                 </div>
-              ) : (
-                <div className="prose overflow-y-scroll max-h-96 prose-gray max-w-none text-gray-800">
-                  <ReactMarkdown>
-                    {content || ""}
-                  </ReactMarkdown>
-                </div>
               )}
+
+              <div className="prose overflow-y-scroll max-h-96 prose-gray max-w-none text-gray-800">
+                <ReactMarkdown>
+                  {content || ""}
+                </ReactMarkdown>
+              </div>
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={onClose}

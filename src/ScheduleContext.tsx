@@ -83,9 +83,6 @@ const createSchedule = async (query: string) => {
         });
       }
 
-      // For debugging
-      console.log("Processing buffer chunk:", buffer.length);
-    
       // Now look for events in the form {"id":1,...}
       const eventRegex = /{[^{}]*"title"[^{}]*"start"[^{}]*"end"[^{}]*}/g;
       const eventMatches = [...buffer.matchAll(eventRegex)];
@@ -148,7 +145,6 @@ const createSchedule = async (query: string) => {
       // Add new chunk to buffer
       const chunk = decoder.decode(value, { stream: true });
       buffer += chunk;
-      console.log("Received chunk, buffer size:", buffer.length);
       
       // Process the current buffer
       processBuffer();
