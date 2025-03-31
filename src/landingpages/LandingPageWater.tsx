@@ -120,7 +120,7 @@ function LandingPageWater() {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="e.g. 'Give me a 7 day course in basic Spanish'"
+                    placeholder="e.g. 'Drink water 2x each morning for 4 days'"
                     className="flex-1 px-4 py-3 text-black rounded-lg border border-neutral-300 focus:outline-none"
                   />
                   <button
@@ -151,14 +151,21 @@ function LandingPageWater() {
                   onClick={() => setQuery('Drink water 4x daily for 7 days')}
                 >
                   <IconWater />
-                  Hydration challenge: drink water 4x daily for 7 days
+                  Hydration Challenge: Drink Water 4x Daily For 7 Days
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Drink water 4x daily for 3 days')}
                 >
                   <IconWater />
-                  Hydration challenge: drink water 4x daily for 3 days
+                  Hydration Challenge: Drink Water 4x Daily For 3 Days
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() => setQuery('Drink water 4x daily for 3 days')}
+                >
+                  <IconWater />
+                  Classic 4x Daily Hydration for 7 days
                 </a>
               </div>
               <SuggestedSchedule />

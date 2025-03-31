@@ -148,41 +148,41 @@ function LandingPage() {
                 </div>
               </form>
               <div className="my-12">
-                <h2 className="text-xl font-bold md:text-3xl text-gray-800 mb-4">Ideas for goals</h2>
+                <h2 className="text-xl font-bold md:text-3xl text-gray-800 mb-4">Ideas for challenges</h2>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Read 15 mins every day for 7 days')}
                 >
                   <IconBook />
-                  Read 15 mins every day for a week
+                  Read 15 Mins Every Day For A Week
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Learn to meditate in 14 days')}
                 >
                   <IconMeditate />
-                  Start meditating: a 14-day journey
+                  Start Meditating: A 14-day Journey
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('4-week meal prep challenge with a simple, beginner-friendly recipe for each Sunday')}
                 >
                   <IconBook />
-                  4-week Sunday meal prep challenge
+                  4-Week Sunday Meal Prep Challenge
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Drink water 4x daily for 7 days')}
                 >
                   <IconWater />
-                  Hydration challenge: drink water 4x daily for 7 days
+                  Hydration Challenge: Drink Water 4x Daily For 7 Days
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('AI fundamentals: Learn AI prompting in 3 days')}
                 >
                   <IconPrompt />
-                  AI fundamentals: Learn AI prompting in 3 days
+                  AI Fundamentals: Learn AI Prompting In 3 Days
                 </a>
               </div>
               <SuggestedSchedule />
