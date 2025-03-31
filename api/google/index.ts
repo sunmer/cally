@@ -1,6 +1,6 @@
 import { query } from "../db.js";
 import { Schedule, CreateScheduleGoogleAPI, GoogleTokenResponse, GOOGLE_OAUTH_PREFIX, DeleteScheduleGoogleAPI } from "../types.js";
-import { allowCors, getGoogleTokenFromCookie, getSubAndEmailFromToken } from "../util.js";
+import { allowCors, getGoogleTokenFromCookie, withAuth } from "../util.js";
 import { google } from 'googleapis';
 
 const isProd = process.env.VERCEL_ENV === 'production';
@@ -28,20 +28,20 @@ const SCOPES = [
 ];
 
 async function handler(req, res) {
-  const { type } = req.query; // Extract query parameter
+  const { type } = req.query;
 
   if (req.method === 'GET' && type === 'auth-check') {
     await checkAuth(req, res);
   } else if (req.method === 'GET' && type === 'auth') {
     await getAuthUrl(req, res);
   } else if (req.method === 'GET' && type === 'logout') {
-    await logout(req, res);
+    await withAuth(logout)(req, res);
   } else if (req.method === 'GET' && type === 'auth-callback') {
     await handleAuthCallback(req, res);
   } else if (req.method === 'POST' && type === 'add-schedule') {
-    await addScheduleToCalendar(req, res);
+    return withAuth(addScheduleToCalendar)(req, res);
   } else if (req.method === 'DELETE' && type === 'delete-schedule') {
-    await deleteScheduleFromCalendar(req, res);
+    await withAuth(deleteScheduleFromCalendar)(req, res);
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
@@ -82,19 +82,19 @@ async function checkAuth(req, res) {
 async function logout(req, res) {
   try {
     // Get the token to potentially revoke it
-    const token = getGoogleTokenFromCookie(req);
+    const googleTokenResponse = getGoogleTokenFromCookie(req);
     
     // Try to revoke the token if it exists
-    if (token && token.access_token) {
+    if (googleTokenResponse && googleTokenResponse.access_token) {
       try {
         // Set credentials for revocation
         oauth2Client.setCredentials({
-          ...token,
-          scope: typeof token.scope === 'string' ? token.scope : undefined
+          ...googleTokenResponse,
+          scope: typeof googleTokenResponse.scope === 'string' ? googleTokenResponse.scope : undefined
         });
         
         // Revoke access token
-        await oauth2Client.revokeToken(token.access_token);
+        await oauth2Client.revokeToken(googleTokenResponse.access_token);
         console.log('Token successfully revoked');
       } catch (revokeError) {
         // Continue with logout even if revocation fails
@@ -173,15 +173,11 @@ async function addScheduleToCalendar(req, res) {
       return res.status(400).json({ error: 'Calendar schedule with events array is required' });
     }
 
-    const token = getGoogleTokenFromCookie(req);
-
-    if (!token) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
+    const googleTokenResponse = getGoogleTokenFromCookie(req);
 
     oauth2Client.setCredentials({
-      ...token,
-      scope: typeof token.scope === 'string' ? token.scope : undefined
+      ...googleTokenResponse,
+      scope: typeof googleTokenResponse?.scope === 'string' ? googleTokenResponse.scope : undefined
     });
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
@@ -236,23 +232,12 @@ async function deleteScheduleFromCalendar(req, res) {
       return res.status(400).json({ error: 'Schedule UUID is required' });
     }
 
-    const token = getGoogleTokenFromCookie(req);
-    if (!token) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
+    const googleTokenResponse = getGoogleTokenFromCookie(req);
 
     oauth2Client.setCredentials({
-      ...token,
-      scope: typeof token.scope === 'string' ? token.scope : undefined
+      ...googleTokenResponse,
+      scope: typeof googleTokenResponse?.scope === 'string' ? googleTokenResponse.scope : undefined
     });
-
-    // Get user information from token to verify ownership
-    const tokenData = getSubAndEmailFromToken(token);
-    if (!tokenData) {
-      console.error('Token structure:', JSON.stringify(token, null, 2));
-      return res.status(400).json({ error: 'Failed to extract user information' });
-    }
-    const { sub } = tokenData;
 
     // Fetch the schedule to get the events
     const scheduleResult = await query(
@@ -260,7 +245,7 @@ async function deleteScheduleFromCalendar(req, res) {
        FROM schedules s
        JOIN users u ON s.user_id = u.id
        WHERE s.uuid = $1 AND u.sub = $2`,
-      [uuid, GOOGLE_OAUTH_PREFIX + sub]
+      [uuid, GOOGLE_OAUTH_PREFIX + req.user.sub]
     );
 
     if (scheduleResult.rowCount === 0) {

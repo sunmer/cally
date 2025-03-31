@@ -1,13 +1,13 @@
-import { getGoogleTokenFromCookie, allowCors, getSubAndEmailFromToken } from '../util.js';
+import { getGoogleTokenFromCookie, allowCors, withAuth } from '../util.js';
 import { query } from '../db.js';
 import { Schedule, GOOGLE_OAUTH_PREFIX } from '../types.js';
 
 
 async function handler(req, res) {
   if (req.method === 'GET') {
-    await getEvent(req, res);
+    return withAuth(getEvent)(req, res);
   } else if (req.method === 'PUT') {
-    await updateEvent(req, res);
+    return withAuth(updateEvent)(req, res);
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
@@ -20,21 +20,6 @@ const getEvent = async (req, res) => {
     if (!uuid || !id) {
       return res.status(400).json({ error: 'Missing schedule uuid or event id' });
     }
-
-    // Get the user's token and extract the sub.
-    const token = getGoogleTokenFromCookie(req);
-    if (!token) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    const tokenData = getSubAndEmailFromToken(token);
-    if (!tokenData) {
-      console.error('Token structure:', JSON.stringify(token, null, 2));
-      return res.status(400).json({ error: 'Failed to extract user information' });
-    }
-
-    const { sub } = tokenData;
-
     // Query the schedule using the uuid and verify that it belongs to the authenticated user.
     const scheduleResult = await query(
       `SELECT 
@@ -46,7 +31,7 @@ const getEvent = async (req, res) => {
       FROM schedules s
       JOIN users u ON s.user_id = u.id
       WHERE s.uuid = $1 AND u.sub = $2`,
-      [uuid, GOOGLE_OAUTH_PREFIX + sub]
+      [uuid, GOOGLE_OAUTH_PREFIX + req.user.sub]
     );
 
     if (scheduleResult.rows.length === 0) {
@@ -87,24 +72,12 @@ const updateEvent = async (req, res) => {
       return res.status(400).json({ error: 'Missing event data in request body' });
     }
 
-    // Get the user's token and extract the sub.
-    const token = getGoogleTokenFromCookie(req);
-    if (!token) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-    const tokenData = getSubAndEmailFromToken(token);
-    if (!tokenData) {
-      console.error('Token structure:', JSON.stringify(token, null, 2));
-      return res.status(400).json({ error: 'Failed to extract user information' });
-    }
-    const { sub } = tokenData;
-
     // Query the schedule to verify ownership.
     const scheduleResult = await query(
       `SELECT events FROM schedules s
        JOIN users u ON s.user_id = u.id
        WHERE s.uuid = $1 AND u.sub = $2`,
-      [uuid, GOOGLE_OAUTH_PREFIX + sub]
+      [uuid, GOOGLE_OAUTH_PREFIX + req.user.sub]
     );
 
     if (scheduleResult.rows.length === 0) {

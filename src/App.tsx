@@ -6,6 +6,7 @@ import PrivacyAgreementPage from './PrivacyAgreementPage';
 import LandingPage from './LandingPage';
 import ScheduleEventPage from './ScheduleEventPage';
 import { ScheduleProvider } from './ScheduleContext';
+import LandingPageWater from './landingpages/LandingPageWater';
 
 
 function AppContent() {
@@ -33,6 +34,8 @@ function AppContent() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/privacy-agreement" element={<PrivacyAgreementPage />} />
           <Route path="/events/:uuid/:id" element={<ScheduleEventPage />} />
+
+          <Route path="/landing/water" element={<LandingPageWater />} />
         </Routes>
 
         <Footer />

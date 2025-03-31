@@ -6,10 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import Settings from '../Settings';
 import { toast } from 'react-toastify';
 
-
 const MySchedules = () => {
   const { mySchedules, loading, setMySchedules } = useScheduleContext();
-  const [deleteScheduleLoading, setDeleteScheduleLoading] = useState(false);
+  // Instead of a boolean, track the uuid of the schedule being deleted
+  const [deletingScheduleId, setDeletingScheduleId] = useState(null);
 
   const navigate = useNavigate();
 
@@ -46,8 +46,8 @@ const MySchedules = () => {
 
   const handleDeleteSchedule = async (schedule: any) => {
     try {
-      // Delete schedule from the database
-      setDeleteScheduleLoading(true);
+      // Set the deleting schedule id so only its button shows the loader
+      setDeletingScheduleId(schedule.uuid);
       toast(`Deleting ${schedule.title} from your Google Calendar`);
       
       const dbResponse = await fetch(`${Settings.API_URL}/schedules`, {
@@ -61,7 +61,6 @@ const MySchedules = () => {
         throw new Error('Failed to delete schedule from database');
       }
 
-      // Delete schedule from Google Calendar
       const googleResponse = await fetch(`${Settings.API_URL}/google?type=delete-schedule`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -73,14 +72,14 @@ const MySchedules = () => {
         throw new Error('Failed to delete schedule from Google Calendar');
       }
 
-      // Update the state by removing the schedule with the matching uuid
+      // Update state to remove the deleted schedule
       setMySchedules(mySchedules.filter((s: any) => s.uuid !== schedule.uuid));
       toast(`${schedule.title} was deleted from your Google Calendar`);
     } catch (error) {
       console.error("Error deleting schedule:", error);
       alert("Failed to delete schedule. Please try again.");
     } finally {
-      setDeleteScheduleLoading(false);
+      setDeletingScheduleId(null);
     }
   };
 
@@ -96,15 +95,15 @@ const MySchedules = () => {
               <h3 className="text-xl font-medium text-black mb-2">
                 <div className="flex items-center gap-2">
                   {schedule.title}
-                  <button disabled={deleteScheduleLoading} onClick={() => handleDeleteSchedule(schedule)} title="Remove this schedule from your Google calendar">
-                    {deleteScheduleLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                      </>
+                  <button 
+                    disabled={deletingScheduleId === schedule.uuid} 
+                    onClick={() => handleDeleteSchedule(schedule)} 
+                    title="Remove this schedule from your Google calendar"
+                  >
+                    {deletingScheduleId === schedule.uuid ? (
+                      <Loader2 className="w-4 h-4 animate-spin mx-auto" />
                     ) : (
-                      <>
-                        <Trash2 className="w-5 h-5 text-red-500" />
-                      </>
+                      <Trash2 className="w-5 h-5 text-red-500" />
                     )}
                   </button>
                 </div>

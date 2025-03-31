@@ -29,6 +29,29 @@ export function getGoogleTokenFromCookie(req): GoogleTokenResponse | null {
   }
 }
 
+export function withAuth(handler) {
+  return async (req, res) => {
+    // Get the token from cookie
+    const token = getGoogleTokenFromCookie(req);
+    if (!token) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Decode token to extract user info (e.g., sub and email)
+    const tokenData = getSubAndEmailFromToken(token);
+    if (!tokenData) {
+      console.error('Token structure:', JSON.stringify(token, null, 2));
+      return res.status(400).json({ error: 'Failed to extract user information' });
+    }
+
+    // Attach the token data to the request object for further use in the endpoint
+    req.user = tokenData;
+
+    // Proceed to the original handler
+    return handler(req, res);
+  };
+}
+
 export const allowCors = fn => async (req, res) => {
   let allowedOrigins = [
     'https://calera.io',

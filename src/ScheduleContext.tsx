@@ -5,7 +5,6 @@ import { toast } from 'react-toastify';
 
 type ScheduleContextType = {
   schedule: Schedule | null;
-  setSchedule: React.Dispatch<React.SetStateAction<Schedule | null>>;
   mySchedules: Schedule[];
   setMySchedules: React.Dispatch<React.SetStateAction<Schedule[]>>;
   loading: boolean;
@@ -160,6 +159,9 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Get the full schedule from the response
       const newSchedule: Schedule = await createScheduleResponse.json();
       
+      // Update the schedule state with the response from the server
+      setSchedule(newSchedule);
+      
       // Send the full schedule to the Google Calendar API
       const addScheduleToGoogleCalendarResponse = await fetch(
         `${Settings.API_URL}/google?type=add-schedule`,
@@ -170,6 +172,7 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           credentials: 'include',
         }
       );
+
       if (!addScheduleToGoogleCalendarResponse.ok) throw new Error('Failed to add events to calendar');
       toast(`${newSchedule.title} was successfully added to your calendar!`);
     } catch (err: any) {
@@ -179,7 +182,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setLoading(false);
     }
   };
-  
 
   const formatDateToICS = (dateString: string): string => {
     const date = new Date(dateString);
@@ -203,12 +205,20 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const dtstamp = formatDateToICS(new Date().toISOString());
       const dtstart = formatDateToICS(event.start);
       const dtend = formatDateToICS(event.end);
+      
+      // Generate the event URL using the schedule UUID and event ID
+      const eventUrl = `${Settings.WEB_URL}/events/${sch.uuid}/${event.id}`;
+      
       icsContent += "BEGIN:VEVENT\r\n";
       icsContent += `UID:${uid}\r\n`;
       icsContent += `DTSTAMP:${dtstamp}\r\n`;
       icsContent += `DTSTART:${dtstart}\r\n`;
       icsContent += `DTEND:${dtend}\r\n`;
       icsContent += `SUMMARY:${event.title}\r\n`;
+      
+      // Add the URL
+      icsContent += `URL:${eventUrl}\r\n`;
+      
       if (event.description) {
         icsContent += `DESCRIPTION:${event.description}\r\n`;
       }
@@ -298,7 +308,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <ScheduleContext.Provider
       value={{
         schedule,
-        setSchedule,
         mySchedules,
         setMySchedules,
         loading,
