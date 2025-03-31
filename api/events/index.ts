@@ -1,4 +1,4 @@
-import { getGoogleTokenFromCookie, allowCors, withAuth } from '../util.js';
+import { allowCors, withAuth } from '../util.js';
 import { query } from '../db.js';
 import { Schedule, GOOGLE_OAUTH_PREFIX } from '../types.js';
 

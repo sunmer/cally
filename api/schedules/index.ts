@@ -31,18 +31,18 @@ const createSchedule = async (req, res) => {
       [GOOGLE_OAUTH_PREFIX + req.user.sub]
     );
 
-    let userId;
+    let newUserId;
     if (userResult.rowCount === 0) {
       const newUuidUser = uuidv7();
       const newUser = await query(
         `INSERT INTO users (sub, email, uuid) VALUES ($1, $2, $3) RETURNING id`,
         [GOOGLE_OAUTH_PREFIX + req.user.sub, req.user.email, newUuidUser]
       );
-      console.log(`Created new user with uuid: ${req.user.uuid}`);
-      userId = newUser.rows[0].id;
+      newUserId = newUser.rows[0].id;
+      console.log(`Created new user with id: ${newUserId}`);
     } else {
       console.log(`User with sub: ${req.user.sub} already exists`);
-      userId = userResult.rows[0].id;
+      newUserId = userResult.rows[0].id;
     }
 
     //​The restriction of event IDs in Google Calendar aligns with the base32hex encoding scheme, 
@@ -66,10 +66,10 @@ const createSchedule = async (req, res) => {
     const newUuidEvent = uuidv7();
     const insertScheduleResult = await query(
       `INSERT INTO schedules (events, title, user_id, uuid) VALUES ($1, $2, $3, $4) RETURNING uuid`,
-      [JSON.stringify(eventsWithIds), schedule.title, userId, newUuidEvent]
+      [JSON.stringify(eventsWithIds), schedule.title, newUserId, newUuidEvent]
     );
 
-    console.log(`Inserted events for user_id: ${userId}`);
+    console.log(`Inserted events for user_id: ${newUserId}`);
 
     // Return the full schedule object (omit schedule.id if needed)
     const createdSchedule = {
