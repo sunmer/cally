@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Slider from "react-slick";
 import { Loader2, Trash2 } from "lucide-react";
 import { useScheduleContext } from '../ScheduleContext';
 import { useNavigate } from 'react-router-dom';
 import Settings from '../Settings';
+import { toast } from 'react-toastify';
 
 
 const MySchedules = () => {
   const { mySchedules, loading, setMySchedules } = useScheduleContext();
+  const [deleteScheduleLoading, setDeleteScheduleLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const sliderSettings = {
@@ -44,17 +47,20 @@ const MySchedules = () => {
   const handleDeleteSchedule = async (schedule: any) => {
     try {
       // Delete schedule from the database
+      setDeleteScheduleLoading(true);
+      toast(`Deleting ${schedule.title} from your Google Calendar`);
+      
       const dbResponse = await fetch(`${Settings.API_URL}/schedules`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ uuid: schedule.uuid }),
       });
-  
+
       if (!dbResponse.ok) {
         throw new Error('Failed to delete schedule from database');
       }
-  
+
       // Delete schedule from Google Calendar
       const googleResponse = await fetch(`${Settings.API_URL}/google?type=delete-schedule`, {
         method: 'DELETE',
@@ -62,16 +68,19 @@ const MySchedules = () => {
         credentials: 'include',
         body: JSON.stringify({ uuid: schedule.uuid }),
       });
-  
+
       if (!googleResponse.ok) {
         throw new Error('Failed to delete schedule from Google Calendar');
       }
-  
+
       // Update the state by removing the schedule with the matching uuid
       setMySchedules(mySchedules.filter((s: any) => s.uuid !== schedule.uuid));
+      toast(`${schedule.title} was deleted from your Google Calendar`);
     } catch (error) {
       console.error("Error deleting schedule:", error);
       alert("Failed to delete schedule. Please try again.");
+    } finally {
+      setDeleteScheduleLoading(false);
     }
   };
 
@@ -87,8 +96,16 @@ const MySchedules = () => {
               <h3 className="text-xl font-medium text-black mb-2">
                 <div className="flex items-center gap-2">
                   {schedule.title}
-                  <button onClick={() => handleDeleteSchedule(schedule)} title="Remove this schedule from your Google calendar">
-                    <Trash2 className="w-5 h-5 text-red-500" />
+                  <button disabled={deleteScheduleLoading} onClick={() => handleDeleteSchedule(schedule)} title="Remove this schedule from your Google calendar">
+                    {deleteScheduleLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-5 h-5 text-red-500" />
+                      </>
+                    )}
                   </button>
                 </div>
               </h3>
