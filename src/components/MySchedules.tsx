@@ -1,11 +1,13 @@
 import React from 'react';
 import Slider from "react-slick";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useScheduleContext } from '../ScheduleContext';
 import { useNavigate } from 'react-router-dom';
+import Settings from '../Settings';
+
 
 const MySchedules = () => {
-  const { mySchedules, loading: isScheduleLoading } = useScheduleContext();
+  const { mySchedules, loading, setMySchedules } = useScheduleContext();
   const navigate = useNavigate();
 
   const sliderSettings = {
@@ -39,16 +41,57 @@ const MySchedules = () => {
     }
   };
 
+  const handleDeleteSchedule = async (schedule: any) => {
+    try {
+      // Delete schedule from the database
+      const dbResponse = await fetch(`${Settings.API_URL}/schedules`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ uuid: schedule.uuid }),
+      });
+  
+      if (!dbResponse.ok) {
+        throw new Error('Failed to delete schedule from database');
+      }
+  
+      // Delete schedule from Google Calendar
+      const googleResponse = await fetch(`${Settings.API_URL}/google?type=delete-schedule`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ uuid: schedule.uuid }),
+      });
+  
+      if (!googleResponse.ok) {
+        throw new Error('Failed to delete schedule from Google Calendar');
+      }
+  
+      // Update the state by removing the schedule with the matching uuid
+      setMySchedules(mySchedules.filter((s: any) => s.uuid !== schedule.uuid));
+    } catch (error) {
+      console.error("Error deleting schedule:", error);
+      alert("Failed to delete schedule. Please try again.");
+    }
+  };
+
   return (
     <div>
       <div className="mt-8">
-        {isScheduleLoading && (
+        {loading && (
           <Loader2 className="w-4 h-4 animate-spin" />
         )}
         <ul className="mt-4 space-y-4">
           {mySchedules.map((schedule, idx) => (
             <li key={idx}>
-              <h3 className="text-xl font-medium text-black mb-2">{schedule.title}</h3>
+              <h3 className="text-xl font-medium text-black mb-2">
+                <div className="flex items-center gap-2">
+                  {schedule.title}
+                  <button onClick={() => handleDeleteSchedule(schedule)} title="Remove this schedule from your Google calendar">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </button>
+                </div>
+              </h3>
               {schedule.events && schedule.events.length > 0 && (
                 <div className="mb-12">
                   <Slider {...sliderSettings}>

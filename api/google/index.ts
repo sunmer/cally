@@ -1,5 +1,6 @@
-import { Schedule, ScheduleToGoogleAPI, GoogleTokenResponse } from "../types.js";
-import { allowCors, getGoogleTokenFromCookie } from "../util.js";
+import { query } from "../db.js";
+import { Schedule, CreateScheduleGoogleAPI, GoogleTokenResponse, GOOGLE_OAUTH_PREFIX, DeleteScheduleGoogleAPI } from "../types.js";
+import { allowCors, getGoogleTokenFromCookie, getSubAndEmailFromToken } from "../util.js";
 import { google } from 'googleapis';
 
 const isProd = process.env.VERCEL_ENV === 'production';
@@ -38,7 +39,9 @@ async function handler(req, res) {
   } else if (req.method === 'GET' && type === 'auth-callback') {
     await handleAuthCallback(req, res);
   } else if (req.method === 'POST' && type === 'add-schedule') {
-    await addSchedule(req, res);
+    await addScheduleToCalendar(req, res);
+  } else if (req.method === 'DELETE' && type === 'delete-schedule') {
+    await deleteScheduleFromCalendar(req, res);
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
@@ -161,7 +164,7 @@ async function handleAuthCallback(req, res) {
 }
 
 // Add events to Google Calendar
-async function addSchedule(req, res) {
+async function addScheduleToCalendar(req, res) {
   try {
     // Expecting the request body to match the new CalendarSchedule type
     const schedule = req.body as Schedule;
@@ -184,13 +187,9 @@ async function addSchedule(req, res) {
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     const results: any[] = [];
 
-    const eventsWithIds = schedule.events.map((event, index) => ({
-      ...event,
-      id: index + 1
-    }));
-
-    for (const event of eventsWithIds) {
-      const calendarEvent: ScheduleToGoogleAPI = {
+    for (const event of schedule.events) {
+      const calendarEvent: CreateScheduleGoogleAPI = {
+        id: event.googleId,
         summary: event.title,
         description: event.description,
         start: {
@@ -225,6 +224,87 @@ async function addSchedule(req, res) {
   } catch (error) {
     console.error('Error adding events to calendar:', error);
     return res.status(500).json({ error: 'Failed to add events to calendar' });
+  }
+}
+
+async function deleteScheduleFromCalendar(req, res) {
+  try {
+    // Extract the schedule UUID from the request body
+    const { uuid } = req.body;
+    
+    if (!uuid) {
+      return res.status(400).json({ error: 'Schedule UUID is required' });
+    }
+
+    const token = getGoogleTokenFromCookie(req);
+    if (!token) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    oauth2Client.setCredentials({
+      ...token,
+      scope: typeof token.scope === 'string' ? token.scope : undefined
+    });
+
+    // Get user information from token to verify ownership
+    const tokenData = getSubAndEmailFromToken(token);
+    if (!tokenData) {
+      console.error('Token structure:', JSON.stringify(token, null, 2));
+      return res.status(400).json({ error: 'Failed to extract user information' });
+    }
+    const { sub } = tokenData;
+
+    // Fetch the schedule to get the events
+    const scheduleResult = await query(
+      `SELECT events 
+       FROM schedules s
+       JOIN users u ON s.user_id = u.id
+       WHERE s.uuid = $1 AND u.sub = $2`,
+      [uuid, GOOGLE_OAUTH_PREFIX + sub]
+    );
+
+    if (scheduleResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Schedule not found or not owned by current user' });
+    }
+
+    const events = scheduleResult.rows[0].events;
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    
+    // Explicitly type the results array
+    const results: DeleteScheduleGoogleAPI[] = [];
+
+    // Delete each event from Google Calendar
+    for (const event of events) {
+      if (event.googleId) {
+        try {
+          await calendar.events.delete({
+            calendarId: 'primary',
+            eventId: event.googleId
+          });
+          results.push({
+            eventId: event.id,
+            googleId: event.googleId,
+            deleted: true
+          });
+        } catch (error) {
+          console.error(`Error deleting event with googleId "${event.googleId}":`, error);
+          results.push({
+            eventId: event.id,
+            googleId: event.googleId,
+            deleted: false,
+            error: (error as any).message
+          });
+        }
+      }
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Events deleted from Google Calendar'
+    });
+  } catch (error) {
+    console.error('Error deleting events from calendar:', error);
+    return res.status(500).json({ error: 'Failed to delete events from calendar' });
   }
 }
 

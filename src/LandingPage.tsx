@@ -18,7 +18,7 @@ import MySchedules from './components/MySchedules';
 
 function LandingPage() {
   const { isAuthenticated, login, loading: isAuthenticationLoading } = useAuth();
-  const { suggestSchedule, setSchedule, fetchSchedules, addScheduleToCalendar } = useScheduleContext();
+  const { suggestSchedule, setSchedule, fetchSchedules, addScheduleToGoogleCalendar } = useScheduleContext();
   const [query, setQuery] = useState('');
   const [createScheduleLoading, setCreateScheduleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'create' | 'myschedules'>('create');
@@ -30,7 +30,7 @@ function LandingPage() {
         const scheduleFromStorage: Schedule = JSON.parse(storedSchedule);
         
         setSchedule(scheduleFromStorage);
-        await addScheduleToCalendar(scheduleFromStorage);
+        await addScheduleToGoogleCalendar(scheduleFromStorage);
         localStorage.removeItem("pendingSchedule");
       }
     };
@@ -125,7 +125,7 @@ function LandingPage() {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="e.g., 'A 3-week course to learn Spanish basics'"
+                    placeholder="e.g. 'Give me a 7 day course in basic Spanish'"
                     className="flex-1 px-4 py-3 text-black rounded-lg border border-neutral-300 focus:outline-none"
                   />
                   <button

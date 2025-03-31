@@ -1,5 +1,6 @@
 export type ScheduleEvent = {
   id: number;
+  googleId: string;
   title: string;
   description: string;
   content: string;
@@ -10,6 +11,7 @@ export type ScheduleEvent = {
 
 export type Schedule = {
   uuid?: string;
+  id?: number;
   title: string;
   events: ScheduleEvent[];
   requiresAdditionalContent: boolean

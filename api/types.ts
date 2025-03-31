@@ -2,6 +2,7 @@ export const GOOGLE_OAUTH_PREFIX = 'google:';
 
 export type ScheduleEvent = {
   id: number;
+  googleId: string;
   title: string;
   description: string;
   content: string;
@@ -17,7 +18,8 @@ export type Schedule = {
   requiresAdditionalContent: boolean
 };
 
-export type ScheduleToGoogleAPI = {
+export type CreateScheduleGoogleAPI = {
+  id: string;
   summary: string;
   description: string;
   start: {
@@ -32,6 +34,13 @@ export type ScheduleToGoogleAPI = {
     title: string;
     url: string;
   };
+};
+
+export type DeleteScheduleGoogleAPI = {
+  eventId: any;
+  googleId: any;
+  deleted: boolean;
+  error?: string;
 };
 
 export type GoogleTokenResponse = {

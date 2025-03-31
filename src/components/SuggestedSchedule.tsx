@@ -6,7 +6,7 @@ import { useAuth } from '../AuthContext';
 import ModalScheduleItem from './ModalScheduleEvent';
 
 const SuggestedSchedule: React.FC = () => {
-  const { schedule, addScheduleToCalendar: addToCalendar, downloadICS } = useScheduleContext();
+  const { schedule, addScheduleToGoogleCalendar: addToCalendar, downloadICS } = useScheduleContext();
   const { isAuthenticated, login } = useAuth();
   const [isModalScheduleEventOpen, setIsModalScheduleEventOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);

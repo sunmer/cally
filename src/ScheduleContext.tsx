@@ -7,10 +7,11 @@ type ScheduleContextType = {
   schedule: Schedule | null;
   setSchedule: React.Dispatch<React.SetStateAction<Schedule | null>>;
   mySchedules: Schedule[];
+  setMySchedules: React.Dispatch<React.SetStateAction<Schedule[]>>;
   loading: boolean;
   error: string | null;
   suggestSchedule: (query: string) => Promise<void>;
-  addScheduleToCalendar: (schedule: Schedule) => Promise<void>;
+  addScheduleToGoogleCalendar: (schedule: Schedule) => Promise<void>;
   downloadICS: (schedule: Schedule) => Promise<void>;
   fetchSchedules: () => Promise<void>;
   updateEvent: (
@@ -28,37 +29,22 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Create a schedule based on a query string.
-  // In your ScheduleContext.tsx
-
   const suggestSchedule = async (query: string) => {
     setLoading(true);
     setError(null);
-
-    // Initialize with empty schedule structure
     setSchedule({
       title: '',
       requiresAdditionalContent: false,
       events: []
     });
-
     try {
       const res = await fetch(
         `${Settings.API_URL}/suggest/calendar?text=${encodeURIComponent(query)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        { method: 'GET', headers: { 'Content-Type': 'application/json' } }
       );
-
       if (!res.ok || !res.body) throw new Error('Failed to get events');
-
-      // Set up stream parsing
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-
       let buffer = '';
       let processedEventIds = new Set<string>();
       let scheduleTitle = '';
@@ -66,22 +52,18 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       let allEvents: any[] = [];
 
       const processBuffer = () => {
-        // Try to extract title and requiresAdditionalContent if not already found
         if (!scheduleTitle) {
           const titleMatch = buffer.match(/"title"\s*:\s*"([^"]+)"/);
           if (titleMatch) {
             scheduleTitle = titleMatch[1];
           }
         }
-
         if (requiresAdditionalContent === false) {
           const requiresMatch = buffer.match(/"requiresAdditionalContent"\s*:\s*(true|false)/);
           if (requiresMatch) {
             requiresAdditionalContent = requiresMatch[1] === 'true';
           }
         }
-
-        // If we have title and requiresAdditionalContent, update the schedule
         if (scheduleTitle && requiresAdditionalContent !== undefined) {
           setSchedule(prevSchedule => {
             if (!prevSchedule) return prevSchedule;
@@ -92,28 +74,17 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             };
           });
         }
-
-        // Look for complete event objects
-        // This regex is more strict to ensure we get complete JSON objects
         const eventRegex = /{[^{}]*"title"[^{}]*"start"[^{}]*"end"[^{}]*}/g;
         const eventMatches = [...buffer.matchAll(eventRegex)];
-
         let newEvents: any[] = [];
-
         if (eventMatches.length > 0) {
           console.log(`Found ${eventMatches.length} potential events in this chunk`);
-
           for (const match of eventMatches) {
             try {
               const eventJson = match[0];
               const eventObj = JSON.parse(eventJson);
-
-              // Validate it's an event object
               if (eventObj.title && eventObj.start && eventObj.end) {
-                // Create a unique identifier using all event properties
                 const eventId = `${eventObj.title}-${eventObj.start}-${eventObj.end}`;
-
-                // Check if we've already processed this event
                 if (!processedEventIds.has(eventId)) {
                   processedEventIds.add(eventId);
                   console.log("Found new event:", eventObj.title);
@@ -125,8 +96,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               console.error("Error parsing event:", e, match[0]);
             }
           }
-
-          // Batch update with all new events
           if (newEvents.length > 0) {
             setSchedule(prevSchedule => {
               if (!prevSchedule) return prevSchedule;
@@ -137,8 +106,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             });
           }
         }
-
-        // Clean up buffer by removing completely processed events
         eventMatches.forEach(match => {
           const index = buffer.indexOf(match[0]);
           if (index !== -1) {
@@ -147,15 +114,11 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
       };
 
-      // Process the stream
       while (true) {
         const { value, done } = await reader.read();
         if (done) {
           console.log("Stream complete, final event count:", allEvents.length);
-          // Process any remaining data
           processBuffer();
-
-          // Final update to ensure all events are included
           setSchedule(prevSchedule => {
             if (!prevSchedule) return prevSchedule;
             return {
@@ -167,17 +130,11 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           });
           break;
         }
-
-        // Add new chunk to buffer
         const chunk = decoder.decode(value, { stream: true });
         buffer += chunk;
-
         console.log("Received chunk:", chunk.length, "bytes");
-
-        // Process the current buffer
         processBuffer();
       }
-
     } catch (err: any) {
       console.error("Error in suggestSchedule:", err);
       setError(err.message);
@@ -186,7 +143,44 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Helper functions to generate ICS file content.
+  const addScheduleToGoogleCalendar = async (schedule: Schedule) => {
+    if (!schedule) return;
+    toast(`Adding ${schedule.title} to your Google calendar...`);
+    setLoading(true);
+    try {
+      // Create schedule and retrieve the full schedule object
+      const createScheduleResponse = await fetch(`${Settings.API_URL}/schedules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(schedule),
+      });
+      if (!createScheduleResponse.ok) throw new Error('Failed to save schedule');
+      
+      // Get the full schedule from the response
+      const newSchedule: Schedule = await createScheduleResponse.json();
+      
+      // Send the full schedule to the Google Calendar API
+      const addScheduleToGoogleCalendarResponse = await fetch(
+        `${Settings.API_URL}/google?type=add-schedule`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newSchedule),
+          credentials: 'include',
+        }
+      );
+      if (!addScheduleToGoogleCalendarResponse.ok) throw new Error('Failed to add events to calendar');
+      toast(`${newSchedule.title} was successfully added to your calendar!`);
+    } catch (err: any) {
+      console.error("Error adding events to calendar:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
   const formatDateToICS = (dateString: string): string => {
     const date = new Date(dateString);
     const pad = (num: number) => (num < 10 ? "0" + num : num);
@@ -224,50 +218,8 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return icsContent;
   };
 
-  // Save the schedule and add it to the user's Google Calendar.
-  const addScheduleToCalendar = async (schedule: Schedule) => {
-    if (!schedule) return;
-
-    toast(`Adding ${schedule.title} to your Google calendar...`);
-    setLoading(true);
-
-    try {
-      // Save the schedule in your DB.
-      const createScheduleResponse = await fetch(`${Settings.API_URL}/schedules`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(schedule),
-      });
-      if (!createScheduleResponse.ok) throw new Error('Failed to save schedule');
-      const createScheduleResponseJSON = await createScheduleResponse.json();
-      schedule.uuid = createScheduleResponseJSON.uuid;
-
-      // Add schedule to Google Calendar.
-      const addScheduleToGoogleCalendarResponse = await fetch(
-        `${Settings.API_URL}/google?type=add-schedule`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(schedule),
-          credentials: 'include',
-        }
-      );
-      if (!addScheduleToGoogleCalendarResponse.ok) throw new Error('Failed to add events to calendar');
-
-      toast(`${schedule.title} was successfully added to your calendar!`);
-    } catch (err: any) {
-      console.error("Error adding events to calendar:", err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Generate and download an ICS file.
   const downloadICS = async (schedule: Schedule) => {
     if (!schedule) return;
-
     setLoading(true);
     try {
       const icsString = generateICS(schedule);
@@ -280,8 +232,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
-      // Optionally, save schedule to your DB.
       await fetch(`${Settings.API_URL}/schedules`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -296,7 +246,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Fetch all schedules for the current user.
   const fetchSchedules = async () => {
     setLoading(true);
     setError(null);
@@ -316,7 +265,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Update an event in the schedule's events array.
   const updateEvent = async (
     uuid: string,
     id: number,
@@ -334,8 +282,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       const data = await response.json();
       const updated = data.event;
-
-      // Update the schedule state if it exists.
       if (schedule) {
         const updatedEvents = schedule.events.map((e: ScheduleEvent) =>
           e.id === id ? updated : e
@@ -354,10 +300,11 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         schedule,
         setSchedule,
         mySchedules,
+        setMySchedules,
         loading,
         error,
         suggestSchedule,
-        addScheduleToCalendar: addScheduleToCalendar,
+        addScheduleToGoogleCalendar,
         downloadICS,
         fetchSchedules,
         updateEvent,
