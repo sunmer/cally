@@ -58,12 +58,14 @@ Important scheduling rules:
 1. CRITICAL: If a specific time is mentioned (e.g., "9am", "3:30pm"), you MUST use exactly that time for the event. Never substitute or adjust explicitly mentioned times.
 2. If a specific date is mentioned, use that date; if none is detected, use ${isoTomorrow}.
 3. Each event must have a realistic duration (no less than 15 minutes and no longer than 8 hours).
-4. For tasks without a specified duration, use a sensible default based on the nature of the task.
-5. Event start and end times must be distinct.
-6. For multiple events, ensure they do not overlap and are reasonably spaced.
-7. For recurring or multi-day challenges, generate separate event entries for each occurrence.
-8. Only set events at the hour or half-hour when NO specific time is mentioned. Otherwise, use the exact time specified in the request.
+4. **The event duration must reflect the time it would take to read through the contents described in the event description.** For instance, if the description is brief—implying a quick tip or a short daily piece—set the event duration between 3 and 10 minutes. If the description indicates more extensive content, allocate a longer, appropriate duration.
+5. For tasks without a specified duration, use a sensible default based on the nature of the task.
+6. Event start and end times must be distinct.
+7. For multiple events, ensure they do not overlap and are reasonably spaced.
+8. For recurring or multi-day challenges, generate separate event entries for each occurrence.
+9. Only set events at the hour or half-hour when NO specific time is mentioned. Otherwise, use the exact time specified in the request.
 `;
+
 
   const response = await streamText({
     headers: {

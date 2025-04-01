@@ -150,7 +150,7 @@ function LandingPageProLifeTips() {
                 <br />
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Cooking Pro Life Tip of the Day (3 Days)')}
+                  onClick={() => setQuery('Cooking Life Tip of the Day (3 Days)')}
                 >
                   Cooking Pro Life Tip of the Day (3 Days)
                 </a>
