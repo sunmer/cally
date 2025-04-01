@@ -9,29 +9,15 @@ import IconIcalCalendar from "../assets/icon-ical-calendar.svg?react";
 import IconOutlookCalendar from "../assets/icon-outlook-calendar.svg?react";
 import IconWater from "../assets/icon-water.svg?react";
 import SuggestedSchedule from '../components/SuggestedSchedule';
-import { Schedule } from '../types';
 import MySchedules from '../components/MySchedules';
 
 
 function LandingPageWater() {
   const { isAuthenticated, login, loading: isAuthenticationLoading } = useAuth();
-  const { suggestSchedule, fetchSchedules, addScheduleToGoogleCalendar } = useScheduleContext();
+  const { suggestSchedule, fetchSchedules } = useScheduleContext();
   const [query, setQuery] = useState('');
   const [createScheduleLoading, setCreateScheduleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'create' | 'myschedules'>('create');
-
-  useEffect(() => {
-    const addPendingSchedule = async () => {
-      const storedSchedule = localStorage.getItem("pendingSchedule");
-      if (isAuthenticated && storedSchedule) {
-        const scheduleFromStorage: Schedule = JSON.parse(storedSchedule);
-        await addScheduleToGoogleCalendar(scheduleFromStorage);
-        localStorage.removeItem("pendingSchedule");
-      }
-    };
-  
-    addPendingSchedule();
-  }, [isAuthenticated]);
 
   // When the active tab is "myschedules", fetch the schedules
   useEffect(() => {

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import Settings from './Settings';
 import { Schedule, ScheduleEvent } from './types';
-import { toast } from 'react-toastify';
 
 type ScheduleContextType = {
   schedule: Schedule | null;
@@ -144,7 +143,7 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addScheduleToGoogleCalendar = async (schedule: Schedule) => {
     if (!schedule) return;
-    toast(`Adding ${schedule.title} to your Google calendar...`);
+    
     setLoading(true);
     try {
       // Create schedule and retrieve the full schedule object
@@ -174,7 +173,6 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
 
       if (!addScheduleToGoogleCalendarResponse.ok) throw new Error('Failed to add events to calendar');
-      toast(`${newSchedule.title} was successfully added to your calendar!`);
     } catch (err: any) {
       console.error("Error adding events to calendar:", err);
       throw err;
