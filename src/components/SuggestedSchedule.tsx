@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Check, Download, Loader2 } from "lucide-react";
 import IconGoogleCalendar from "../assets/icon-google-calendar.svg?react";
 import { useScheduleContext } from '../ScheduleContext';
@@ -17,32 +17,34 @@ const SuggestedSchedule: React.FC = () => {
   const [addToCalendarLoading, setAddToCalendarLoading] = useState(false);
   const [downloadICSLoading, setDownloadICSLoading] = useState(false);
   const [addToCalendarSuccess, setAddToCalendarSuccess] = useState(false);
+  const [hasPendingScheduleBeenProcessed, setHasPendingScheduleBeenProcessed] = useState(false);
+
+  const addPendingSchedule = useCallback(async () => {
+    const storedScheduleStr = localStorage.getItem("pendingSchedule");
+    if (isAuthenticated && storedScheduleStr && !hasPendingScheduleBeenProcessed) {
+      setAddToCalendarLoading(true);
+      setHasPendingScheduleBeenProcessed(true);
+      
+      try {
+        const storedSchedule: Schedule = JSON.parse(storedScheduleStr);
+        toast(`Adding ${storedSchedule.title} to your Google calendar...`);
+        await addScheduleToGoogleCalendar(storedSchedule);
+        localStorage.removeItem("pendingSchedule");
+        setAddToCalendarSuccess(true);
+        toast(`${storedSchedule.title} was successfully added to your calendar!`);
+      } catch (err) {
+        const storedSchedule = JSON.parse(storedScheduleStr);
+        toast(`Failed to add ${storedSchedule.title} to your Google calendar!`);
+        console.error(err);
+      } finally {
+        setAddToCalendarLoading(false);
+      }
+    }
+  }, [isAuthenticated, addScheduleToGoogleCalendar, hasPendingScheduleBeenProcessed]);
 
   useEffect(() => {
-    const addPendingSchedule = async () => {
-      const storedScheduleStr = localStorage.getItem("pendingSchedule");
-      if (isAuthenticated && storedScheduleStr) {
-        setAddToCalendarLoading(true);
-        
-        try {
-          const storedSchedule: Schedule = JSON.parse(storedScheduleStr);
-          toast(`Adding ${storedSchedule.title} to your Google calendar...`);
-          await addScheduleToGoogleCalendar(storedSchedule);
-          localStorage.removeItem("pendingSchedule");
-          setAddToCalendarSuccess(true);
-          toast(`${storedSchedule.title} was successfully added to your calendar!`);
-        } catch (err) {
-          const storedSchedule = JSON.parse(storedScheduleStr);
-          toast(`Failed to add ${storedSchedule.title} to your Google calendar!`);
-          console.error(err);
-        } finally {
-          setAddToCalendarLoading(false);
-        }
-      }
-    };
-
     addPendingSchedule();
-  }, [isAuthenticated, addScheduleToGoogleCalendar]);
+  }, [addPendingSchedule]);
 
   const openModalWithEvent = (
     e: React.MouseEvent<HTMLAnchorElement>,

@@ -1,16 +1,23 @@
+// db.ts
 import pkg from 'pg';
 const { Pool } = pkg;
 
-const pool = new Pool({
-  host: process.env.CALLY_DB_AWS_HOST,
-  port: 5432,
-  user: 'postgres',
-  password: process.env.CALLY_DB_AWS_PASSWORD,
-  database: 'cally',
-  ssl: {
-    rejectUnauthorized: false 
-  }
-});
+let pool: any;
+
+if (!globalThis.pgPool) {
+  globalThis.pgPool = new Pool({
+    host: process.env.CALLY_DB_AWS_HOST,
+    port: 5432,
+    user: 'postgres',
+    password: process.env.CALLY_DB_AWS_PASSWORD,
+    database: 'cally',
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+}
+
+pool = globalThis.pgPool;
 
 export type QueryFunction = (text: string, params?: any[]) => Promise<any>;
 
