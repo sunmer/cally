@@ -7,13 +7,14 @@ import { useScheduleContext } from '../ScheduleContext';
 import IconGoogleCalendar from "../assets/icon-google-calendar.svg?react";
 import IconIcalCalendar from "../assets/icon-ical-calendar.svg?react";
 import IconOutlookCalendar from "../assets/icon-outlook-calendar.svg?react";
-import IconWater from "../assets/icon-water.svg?react";
+import IconMeditation from "../assets/icon-meditation.svg?react";
 import SuggestedSchedule from '../components/SuggestedSchedule';
 import MySchedules from '../components/MySchedules';
-import { Tooltip } from 'react-tooltip';
+import { Tooltip } from 'react-tooltip'
 
 
-function LandingPageWater() {
+
+function LandingPageMeditation() {
   const { isAuthenticated, login, loading: isAuthenticationLoading } = useAuth();
   const { suggestSchedule, fetchSchedules } = useScheduleContext();
   const [query, setQuery] = useState('');
@@ -49,6 +50,7 @@ function LandingPageWater() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 xl:px-0 pb-24 z-10 relative">
+
       <div className="flex flex-col px-0 sm:px-8 py-8 mb-8">
         <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl lg:leading-tight bg-clip-text bg-gradient-to-r from-green-500 to-cyan-500 text-transparent">
           <span className="font-bold block">Calera</span>
@@ -107,7 +109,7 @@ function LandingPageWater() {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="e.g. 'Drink water 2x each morning for 4 days'"
+                    placeholder="e.g. 'Learn & Practice Meditation Daily For 7 Days'"
                     className="flex-1 px-4 py-3 text-black rounded-lg border border-neutral-300 focus:outline-none"
                   />
                   <button
@@ -132,15 +134,15 @@ function LandingPageWater() {
                 </div>
               </form>
               <div className="my-12">
-              <h2 className="relative inline-flex items-center gap-2 text-xl font-bold md:text-3xl text-gray-800 mb-6">
-                  <IconWater className="w-6 h-6 text-teal-600" />
-                  <span>Ideas for hydration challenges</span>
+                <h2 className="relative inline-flex items-center gap-2 text-xl font-bold md:text-3xl text-gray-800 mb-6">
+                  <IconMeditation className="w-6 h-6 text-teal-600" />
+                  <span>Ideas for meditation challenges</span>
                   <span
                     data-tooltip-id="tooltip"
-                    data-tooltip-content="99+ people subscribing to hydration challenges"
+                    data-tooltip-content="85+ people subscribing to meditation challenges"
                     className="absolute cursor-pointer top-0 start-[100%] inline-flex items-center gap-1 py-1 px-2 min-w-[60px] rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-2 bg-teal-500 text-white"
                   >
-                    99+
+                    85+
                     <Users className="w-4 h-4 shrink-0" />
                     <Tooltip id="tooltip" />
                   </span>
@@ -148,28 +150,66 @@ function LandingPageWater() {
                 <br />
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Drink water 4x daily for 7 days')}
+                  onClick={() => setQuery('Learn & Practice Meditation 3 Mins Daily (3 Days)')}
                 >
-                  Hydration Challenge: Drink Water 4x Daily For 7 Days
+                  Three-Minute Meditation (3 Days)
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Drink water 4x daily for 3 days')}
+                  onClick={() => setQuery('Learn & Practice Meditation 5 Mins Daily (5 Days)')}
                 >
-                  Hydration Challenge: Drink Water 4x Daily For 3 Days
+                  Five-Minute Meditation (5 Days)
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Drink water 4x daily for 7 days')}
+                  onClick={() => setQuery('Learn & Practice Meditation 2 Mins Daily (7 Days)')}
                 >
-                  Classic 4x Daily Hydration for 7 days
+                  Two-Minute Meditation (7 Days)
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Hydration Before Caffeine 8am for 7 Days')}
+                  onClick={() => setQuery('Learn & Practice Mindful Breathing 3 Mins Daily (5 Days)')}
                 >
-                  Hydration Before Caffeine (7 Days)
+                  Three-Minute Breathing (5 Days)
                 </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() => setQuery('Learn & Practice Body Scan 5 Mins Daily (3 Days)')}
+                >
+                  Five-Minute Body Scan (3 Days)
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() => setQuery('Learn & Practice Gratitude Reflection 3 Mins Daily (7 Days)')}
+                >
+                  Three-Minute Gratitude (7 Days)
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() => setQuery('Learn & Practice Walking Meditation 5 Mins Daily (5 Days)')}
+                >
+                  Five-Minute Walk (5 Days)
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() => setQuery('Learn & Practice Digital Detox Breaths 2 Mins Daily (3 Days)')}
+                >
+                  Two-Minute Digital Detox (3 Days)
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() => setQuery('Learn & Practice Compassion Meditation 3 Mins Daily (7 Days)')}
+                >
+                  Three-Minute Compassion (7 Days)
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() => setQuery('Learn & Practice Sound Meditation 4 Mins Daily (5 Days)')}
+                >
+                  Four-Minute Sound Meditation (5 Days)
+                </a>
+
+
               </div>
               <SuggestedSchedule />
             </div>
@@ -181,4 +221,4 @@ function LandingPageWater() {
   );
 }
 
-export default LandingPageWater;
+export default LandingPageMeditation;
