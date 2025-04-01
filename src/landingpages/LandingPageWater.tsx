@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, CalendarHeart } from "lucide-react";
+import { Loader2, CalendarHeart, Users } from "lucide-react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useAuth } from '../AuthContext';
@@ -131,7 +131,14 @@ function LandingPageWater() {
                 </div>
               </form>
               <div className="my-12">
-                <h2 className="text-xl font-bold md:text-3xl text-gray-800 mb-4">Ideas for goals</h2>
+                <h2 className="relative text-xl font-bold md:text-3xl text-gray-800 mb-6 inline-block">
+                  Ideas for hydration challenges
+                  <span title="99+ followers across all challenges" className="absolute cursor-pointer top-0 start-[calc(100%-2rem)] inline-flex items-center gap-1 py-1 px-2 min-w-[60px] rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-teal-500 text-white">
+                    99+
+                    <Users className="w-4 h-4 shrink-0" />
+                  </span>
+                </h2>
+                <br />
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Drink water 4x daily for 7 days')}
