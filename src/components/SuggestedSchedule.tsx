@@ -4,6 +4,7 @@ import IconGoogleCalendar from "../assets/icon-google-calendar.svg?react";
 import { useScheduleContext } from '../ScheduleContext';
 import { useAuth } from '../AuthContext';
 import ModalScheduleItem from './ModalScheduleEvent';
+import { formatEventDateRange } from '../util';
 
 const SuggestedSchedule: React.FC = () => {
   const { schedule, addScheduleToGoogleCalendar: addToCalendar, downloadICS } = useScheduleContext();
@@ -111,12 +112,7 @@ const SuggestedSchedule: React.FC = () => {
 
       <ul className="mt-4 space-y-4 schedule">
         {schedule.events.map((event, index) => {
-          const eventDate = new Date(event.start);
-          const month = eventDate.toLocaleString('default', { month: 'short' });
-          const day = eventDate.getDate();
-          const startTime = eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const endTime = new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
+          const eventDate = formatEventDateRange(event)
           return (
             <div key={index} className="mb-4">
               <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
@@ -125,9 +121,9 @@ const SuggestedSchedule: React.FC = () => {
                   onClick={(e) => schedule.requiresAdditionalContent ? openModalWithEvent(e, event) : e.preventDefault()}
                 >
                   <div className="flex bg-red-500 flex-row justify-start p-4 font-bold leading-none text-gray-800 uppercase bg-gray-400 rounded-t md:rounded-t-none md:rounded-tl md:rounded-bl md:flex-col md:items-center md:justify-center md:w-1/4">
-                    <div className="md:text-2xl text-white mr-2">{month}</div>
-                    <div className="md:text-5xl text-white mr-2">{day}</div>
-                    <div className="md:text-xl text-white">{startTime} - {endTime}</div>
+                    <div className="md:text-2xl text-white mr-2">{eventDate.month}</div>
+                    <div className="md:text-5xl text-white mr-2">{eventDate.day}</div>
+                    <div className="md:text-xl text-white">{eventDate.startTime} - {eventDate.endTime}</div>
                   </div>
                   <div className="p-4 font-normal text-gray-800 md:w-3/4">
                     <h1 className="mb-2 text-xl md:text-3xl font-bold leading-none tracking-tight text-gray-800">

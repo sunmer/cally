@@ -5,6 +5,7 @@ import { useScheduleContext } from '../ScheduleContext';
 import { useNavigate } from 'react-router-dom';
 import Settings from '../Settings';
 import { toast } from 'react-toastify';
+import { formatEventDateRange } from '../util';
 
 const MySchedules = () => {
   const { mySchedules, loading, setMySchedules } = useScheduleContext();
@@ -112,11 +113,7 @@ const MySchedules = () => {
                 <div className="mb-12">
                   <Slider {...sliderSettings}>
                     {schedule.events.map((event, index) => {
-                      const eventDate = new Date(event.start);
-                      const month = eventDate.toLocaleString('default', { month: 'short' });
-                      const day = eventDate.getDate();
-                      const startTime = new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                      const endTime = new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      const eventDate = formatEventDateRange(event)
                       return (
                         <div key={index}>
                           <a
@@ -127,10 +124,10 @@ const MySchedules = () => {
                             <div className="flex max-h-48 flex-col w-full bg-white rounded shadow-lg border">
                               <div className="flex flex-col w-full md:flex-row">
                                 <div className="flex bg-red-500 flex-row justify-start p-4 font-bold leading-none text-gray-800 uppercase md:flex-col md:items-center md:justify-center md:w-1/4">
-                                  <div className="md:text-2xl text-white mr-2">{month}</div>
-                                  <div className="md:text-5xl text-white mr-2">{day}</div>
+                                  <div className="md:text-2xl text-white mr-2">{eventDate.month}</div>
+                                  <div className="md:text-5xl text-white mr-2">{eventDate.day}</div>
                                   <div className="md:text-xl text-white">
-                                    {startTime} - {endTime}
+                                    {eventDate.startTime} - {eventDate.endTime}
                                   </div>
                                 </div>
                                 <div className="p-4 font-normal text-gray-800 md:w-3/4">

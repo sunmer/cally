@@ -162,10 +162,17 @@ function LandingPageWater() {
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Drink water 4x daily for 3 days')}
+                  onClick={() => setQuery('Drink water 4x daily for 7 days')}
                 >
                   <IconWater />
                   Classic 4x Daily Hydration for 7 days
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() => setQuery('Hydration Before Caffeine 8am for 7 Days')}
+                >
+                  <IconWater />
+                  Hydration Before Caffeine (7 Days)
                 </a>
               </div>
               <SuggestedSchedule />
