@@ -136,10 +136,10 @@ function LandingPageProLifeTips() {
               <div className="my-12">
                 <h2 className="relative inline-flex items-center gap-2 text-xl font-bold md:text-3xl text-gray-800 mb-6">
                   <IconProLifeTips className="w-6 h-6 text-teal-600" />
-                  <span>Ideas for pro life tips schedules</span>
+                  <span>Ideas for life pro tips schedules</span>
                   <span
                     data-tooltip-id="tooltip"
-                    data-tooltip-content="45+ people subscribing to pro life schedules"
+                    data-tooltip-content="45+ people subscribing to life pro schedules"
                     className="absolute cursor-pointer top-0 start-[100%] inline-flex items-center gap-1 py-1 px-2 min-w-[60px] rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-2 bg-teal-500 text-white"
                   >
                     45+
@@ -150,15 +150,15 @@ function LandingPageProLifeTips() {
                 <br />
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Cooking Life Tip of the Day (3 Days)')}
+                  onClick={() => setQuery('Cooking Life Pro Tip of the Day (3 Days)')}
                 >
-                  Cooking Pro Life Tip of the Day (3 Days)
+                  Cooking Life Pro Tip of the Day (3 Days)
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Time Management Pro Life Tips (3 Days)')}
+                  onClick={() => setQuery('Time Management Life Pro Tips (3 Days)')}
                 >
-                  Time Management Pro Life Tips (3 Days)
+                  Time Management Life Pro Tips (3 Days)
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
@@ -186,9 +186,9 @@ function LandingPageProLifeTips() {
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Small Talk Pro Life Tips (3 Days)')}
+                  onClick={() => setQuery('Small Talk Life Pro Tips (3 Days)')}
                 >
-                  Small Talk Pro Life Tips (3 Days)
+                  Small Talk Life Pro Tips (3 Days)
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
