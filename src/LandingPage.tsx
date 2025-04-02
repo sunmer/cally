@@ -55,6 +55,10 @@ function LandingPage() {
     } catch (err: any) {
       console.error(err);
     } finally {
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+      });
       setCreateScheduleLoading(false);
     }
   };

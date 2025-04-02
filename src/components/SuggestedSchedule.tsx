@@ -7,11 +7,13 @@ import ModalScheduleItem from './ModalScheduleEvent';
 import { formatEventDateRange } from '../util';
 import { Schedule } from '../types';
 import { toast } from 'react-toastify';
+import ModalCreateAccount from './ModalCreateAccount';
 
 const SuggestedSchedule: React.FC = () => {
   const { schedule, addScheduleToGoogleCalendar, downloadICS } = useScheduleContext();
   const { isAuthenticated, login } = useAuth();
   const [isModalScheduleEventOpen, setIsModalScheduleEventOpen] = useState(false);
+  const [isModalCreateAccountOpen, setIsModalCreateAccountOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
   const [addToCalendarLoading, setAddToCalendarLoading] = useState(false);
@@ -24,7 +26,7 @@ const SuggestedSchedule: React.FC = () => {
     if (isAuthenticated && storedScheduleStr && !hasPendingScheduleBeenProcessed) {
       setAddToCalendarLoading(true);
       setHasPendingScheduleBeenProcessed(true);
-      
+
       try {
         const storedSchedule: Schedule = JSON.parse(storedScheduleStr);
         toast(`Adding ${storedSchedule.title} to your Google calendar...`);
@@ -79,19 +81,19 @@ const SuggestedSchedule: React.FC = () => {
   const handleDownloadICS = async () => {
     if (!schedule) return;
     if (!isAuthenticated) {
-      localStorage.setItem("pendingSchedule", JSON.stringify(schedule));
-      login();
+      // Open modal to let the user choose between downloading directly or creating an account.
+      setIsModalCreateAccountOpen(true);
       return;
     }
-    setDownloadICSLoading(true);
     try {
+      setDownloadICSLoading(true);
       await downloadICS(schedule);
     } catch (err) {
       console.error(err);
     } finally {
       setDownloadICSLoading(false);
     }
-  };
+  };  
 
   // Early return after all hooks have been called
   if (!schedule || schedule.events.length === 0) return null;
@@ -182,6 +184,11 @@ const SuggestedSchedule: React.FC = () => {
         isOpened={isModalScheduleEventOpen}
         onClose={() => setIsModalScheduleEventOpen(false)}
         event={selectedEvent}
+      />
+      <ModalCreateAccount
+        isOpened={isModalCreateAccountOpen}
+        onClose={() => setIsModalCreateAccountOpen(false)}
+        schedule={schedule}
       />
     </div>
   );
