@@ -66,10 +66,10 @@ function LandingPage() {
           <span className="font-bold block">Calera</span>
         </h1>
         <span className="text-2xl font-bold md:text-3xl text-gray-800">
-          Better habits, scheduled around your life
+          Any goal or habit tailored for your calendar
         </span>
-        <p className="mt-4 md:text-lg text-gray-600 dark:text-neutral-400">
-          Generate any habit or goal with AI, and have it auto-scheduled into your calendar
+        <p className="mt-4 md:text-lg text-gray-600 dark:text-neutral-400 max-w-[700px]">
+        Enter any goal or habit you'd like to adopt, and Calera will carefully plan it and add it to your calendar
         </p>
         <div className="sm:flex auto-cols-max items-center gap-3 md:gap-6 mt-6">
           <span className="block text-xs font-semibold uppercase mb-3 sm:mb-0 dark:text-white">
