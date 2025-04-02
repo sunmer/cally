@@ -55,9 +55,9 @@ function LandingPageMeditation() {
         <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl lg:leading-tight bg-clip-text bg-gradient-to-r from-green-500 to-cyan-500 text-transparent">
           <span className="font-bold block">Calera</span>
         </h1>
-        <span className="text-2xl font-bold md:text-3xl text-gray-800">Your goals, instantly scheduled</span>
+        <span className="text-2xl font-bold md:text-3xl text-gray-800">Better habits, scheduled around your life</span>
         <p className="mt-4 md:text-lg text-gray-600 dark:text-neutral-400">
-          Calera uses AI to turn personal goals into schedules aligned with your personal calendar
+          Generate any habit or goal with AI, and have it auto-scheduled into your calendar
         </p>
         <div className="sm:flex auto-cols-max items-center gap-3 md:gap-6 mt-6">
           <span className="block text-xs font-semibold uppercase mb-3 sm:mb-0 dark:text-white">

@@ -8,7 +8,6 @@ import ScheduleEventPage from './ScheduleEventPage';
 import { ScheduleProvider } from './ScheduleContext';
 import LandingPageWater from './landingpages/LandingPageWater';
 import LandingPageMeditation from './landingpages/LandingPageMeditation';
-import LandingPageLifeProTips from './landingpages/LandingPageLifeProTips';
 
 
 function AppContent() {
@@ -39,7 +38,6 @@ function AppContent() {
 
           <Route path="/landing/water" element={<LandingPageWater />} />
           <Route path="/landing/meditation" element={<LandingPageMeditation />} />
-          <Route path="/landing/lifeprotips" element={<LandingPageLifeProTips />} />
         </Routes>
 
         <Footer />
