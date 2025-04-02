@@ -7,7 +7,17 @@ import { useScheduleContext } from './ScheduleContext';
 import IconGoogleCalendar from "./assets/icon-google-calendar.svg?react";
 import IconIcalCalendar from "./assets/icon-ical-calendar.svg?react";
 import IconOutlookCalendar from "./assets/icon-outlook-calendar.svg?react";
+import IconJournal from "./assets/icon-journal.svg?react";
 import IconBook from "./assets/icon-book.svg?react";
+import IconYoga from "./assets/icon-yoga.svg?react";
+import IconDigitalDetox from "./assets/icon-digital-detox.svg?react";
+import IconMorning from "./assets/icon-morning.svg?react";
+import IconMoney from "./assets/icon-money.svg?react";
+import IconGratitude from "./assets/icon-gratitude.svg?react";
+import IconTraining from "./assets/icon-training.svg?react";
+import IconWalking from "./assets/icon-walking.svg?react";
+import IconLanguage from "./assets/icon-language.svg?react";
+import IconFood from "./assets/icon-food.svg?react";
 import IconMeditate from "./assets/icon-meditate.svg?react";
 import IconWater from "./assets/icon-water.svg?react";
 import IconPrompt from "./assets/icon-prompt.svg?react";
@@ -136,7 +146,7 @@ function LandingPage() {
                 </div>
               </form>
               <div className="my-12">
-                <h2 className="text-xl font-bold md:text-3xl text-gray-800 mb-4">Ideas for challenges</h2>
+                <h2 className="text-xl font-bold md:text-3xl text-gray-800 mb-4">Ideas for habits & goals</h2>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
                   onClick={() => setQuery('Read 15 mins every day for 7 days')}
@@ -172,6 +182,106 @@ function LandingPage() {
                   <IconPrompt />
                   AI Fundamentals: Learn AI Prompting In 3 Days
                 </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('10-Day Journaling Challenge: Spend 5 minutes each day reflecting on a prompt or gratitude list')
+                  }
+                >
+                  <IconJournal />
+                  10-Day Journaling Challenge
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('14-Day Morning Yoga Routine: Start every day with a short, energizing yoga flow')
+                  }
+                >
+                  <IconYoga />
+                  14-Day Morning Yoga Routine
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('7-Day Digital Detox: Limit social media or screen time to 30 minutes daily')
+                  }
+                >
+                  <IconDigitalDetox />
+                  7-Day Digital Detox
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('14-Day Gratitude Practice: Write down 3 things you’re grateful for each morning')
+                  }
+                >
+                  <IconGratitude />
+                  14-Day Gratitude Practice
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('7-Day Push-Up Progression: Add a few more push-ups each day to build strength')
+                  }
+                >
+                  <IconTraining />
+                  7-Day Push-Up Progression
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('7-Day Daily Walk Challenge: Walk for 20 minutes each day')
+                  }
+                >
+                  <IconWalking />
+                  7-Day Daily Walk Challenge
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('14-Day Mindful Eating: Slow down and savor each meal while practicing portion control')
+                  }
+                >
+                  <IconFood />
+                  14-Day Mindful Eating
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('10-Day Early Riser: Wake up 30 minutes earlier to enjoy a calm and productive morning')
+                  }
+                >
+                  <IconMorning />
+                  10-Day Early Riser
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('14-Day Budget & Expense Tracking: Record every purchase to build better spending habits')
+                  }
+                >
+                  <IconMoney />
+                  14-Day Budget & Expense Tracking
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('7-Day Posture Improvement: Do quick posture checks and exercises throughout your day')
+                  }
+                >
+                  <IconWalking />
+                  7-Day Posture Improvement
+                </a>
+                <a
+                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
+                  onClick={() =>
+                    setQuery('Learn basic Spanish in 7 days')
+                  }
+                >
+                  <IconLanguage />
+                  Learn basic Spanish in 7 days
+                </a>
+                
               </div>
               <SuggestedSchedule />
             </div>
