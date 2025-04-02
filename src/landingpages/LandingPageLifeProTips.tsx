@@ -162,9 +162,9 @@ function LandingPageProLifeTips() {
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Smarter Cleaning Tips of the Day (3 Days)')}
+                  onClick={() => setQuery('Life Hack Tip of the Day (3 Days)')}
                 >
-                  Smarter Cleaning Tips of the Day (3 Days)
+                  LifeHack Tip of the Day (3 Days)
                 </a>
                 <a
                   className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"

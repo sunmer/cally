@@ -66,7 +66,7 @@ async function checkAuth(req, res) {
         ...token,
         scope: typeof token.scope === 'string' ? token.scope : undefined
       });
-      
+
       const { credentials } = await oauth2Client.refreshAccessToken();
       setTokenCookie(res, credentials);
       // Update token with new credentials if needed
@@ -83,7 +83,7 @@ async function logout(req, res) {
   try {
     // Get the token to potentially revoke it
     const googleTokenResponse = getGoogleTokenFromCookie(req);
-    
+
     // Try to revoke the token if it exists
     if (googleTokenResponse && googleTokenResponse.access_token) {
       try {
@@ -92,7 +92,7 @@ async function logout(req, res) {
           ...googleTokenResponse,
           scope: typeof googleTokenResponse.scope === 'string' ? googleTokenResponse.scope : undefined
         });
-        
+
         // Revoke access token
         await oauth2Client.revokeToken(googleTokenResponse.access_token);
         console.log('Token successfully revoked');
@@ -101,19 +101,19 @@ async function logout(req, res) {
         console.error('Error revoking token:', revokeError);
       }
     }
-    
+
     // Use the same cookie settings format as setTokenCookie
     const baseCookieSettings = `HttpOnly; Path=/; Max-Age=0`;
     const cookieSettings = isProd
       ? `${baseCookieSettings}; Secure; SameSite=Lax; Domain=${COOKIE_DOMAIN}`
       : baseCookieSettings;
-    
+
     res.setHeader('Set-Cookie', [`google_auth_token=; ${cookieSettings}`]);
     console.log('User logged out successfully');
-    
-    return res.status(200).json({ 
-      authenticated: false, 
-      message: 'Logged out successfully' 
+
+    return res.status(200).json({
+      authenticated: false,
+      message: 'Logged out successfully'
     });
   } catch (error) {
     console.error('Error during logout:', error);
@@ -184,10 +184,12 @@ async function addScheduleToCalendar(req, res) {
     const results: any[] = [];
 
     for (const event of schedule.events) {
+      const eventLink = `${WEB_URL}/events/${schedule.uuid}/${event.id}`;
+      
       const calendarEvent: CreateScheduleGoogleAPI = {
         id: event.googleId,
         summary: event.title,
-        description: event.description,
+        description: `${event.description}\n\nLink to ${event.title}: ${eventLink}`,
         start: {
           dateTime: new Date(event.start).toISOString(),
           timeZone: 'UTC'
@@ -198,7 +200,7 @@ async function addScheduleToCalendar(req, res) {
         },
         source: {
           title: `Link to ${event.title}`,
-          url: WEB_URL + "/events/" + schedule.uuid + "/" + event.id
+          url: eventLink
         }
       };
 
@@ -227,7 +229,7 @@ async function deleteScheduleFromCalendar(req, res) {
   try {
     // Extract the schedule UUID from the request body
     const { uuid } = req.body;
-    
+
     if (!uuid) {
       return res.status(400).json({ error: 'Schedule UUID is required' });
     }
@@ -254,7 +256,7 @@ async function deleteScheduleFromCalendar(req, res) {
 
     const events = scheduleResult.rows[0].events;
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-    
+
     // Explicitly type the results array
     const results: DeleteScheduleGoogleAPI[] = [];
 
@@ -283,8 +285,8 @@ async function deleteScheduleFromCalendar(req, res) {
       }
     }
 
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       message: 'Events deleted from Google Calendar'
     });
   } catch (error) {
