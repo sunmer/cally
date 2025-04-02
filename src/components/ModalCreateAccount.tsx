@@ -3,6 +3,7 @@ import { useScheduleContext } from '../ScheduleContext';
 import { useAuth } from '../AuthContext';
 import { toast } from 'react-toastify';
 import { Schedule } from '../types';
+import IconGoogleCalendar from "../assets/icon-google-calendar.svg?react";
 
 interface ModalCreateAccountProps {
   isOpened: boolean;
@@ -46,7 +47,7 @@ const ModalCreateAccount: React.FC<ModalCreateAccountProps> = ({ isOpened, onClo
           <div className="flex flex-col bg-white border border-gray-200 shadow-2xs rounded-xl pointer-events-auto dark:bg-neutral-800 dark:border-neutral-700 dark:shadow-neutral-700/70">
             <div className="flex justify-between items-center py-3 px-4 border-b border-gray-200 dark:border-neutral-700">
               <h3 id="hs-basic-modal-label" className="font-bold text-gray-800 dark:text-white">
-                Get Started
+                Download {schedule.title} as ICS
               </h3>
               <button
                 type="button"
@@ -63,7 +64,7 @@ const ModalCreateAccount: React.FC<ModalCreateAccountProps> = ({ isOpened, onClo
             </div>
             <div className="p-4 overflow-y-auto">
               <p className="mt-1 text-gray-800 dark:text-neutral-400">
-                You are not logged in. You can either download the ICS directly or create an account to save your schedule.
+                Create an account before download to securely store, manage and sync your schedules across all devices. <br /> <br />Prefer not to sign up? Download the ICS file directly.
               </p>
             </div>
             <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t border-gray-200 dark:border-neutral-700">
@@ -73,14 +74,17 @@ const ModalCreateAccount: React.FC<ModalCreateAccountProps> = ({ isOpened, onClo
                 disabled={loading}
                 className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
               >
-                {loading ? 'Downloading...' : 'Download as ICS directly'}
+                {loading ? 'Downloading...' : 'Only download'}
               </button>
               <button
                 type="button"
                 onClick={handleCreateAccount}
-                className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+                className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-teal-500 hover:bg-teal-600 text-white focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none"
               >
-                Create account
+                <div className="flex items-center justify-center gap-2">
+                  Create account & download
+                  <IconGoogleCalendar className="w-5 h-5" />
+                </div>
               </button>
             </div>
           </div>
