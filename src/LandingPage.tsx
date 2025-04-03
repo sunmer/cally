@@ -49,6 +49,22 @@ function LandingPage() {
     }
   };
 
+  const suggestScheduleAndSubmit = async (query: string) => {
+    setQuery(query);
+    setCreateScheduleLoading(true);
+
+    try {
+      const eventFound = await suggestSchedule(query);
+      if (eventFound) {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setCreateScheduleLoading(false);
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 xl:px-0 pb-24 z-10 relative">
       <div className="flex flex-col px-0 sm:px-8 py-8 mb-8">
@@ -137,7 +153,7 @@ function LandingPage() {
               </form>
               <div className="my-12">
                 <h2 className="text-xl font-bold md:text-3xl text-gray-800 mb-4">Ideas for habits & goals</h2>
-                <Gallery setQuery={setQuery} />
+                <Gallery suggestScheduleAndSubmit={suggestScheduleAndSubmit} />
               </div>
               <SuggestedSchedule />
             </div>
