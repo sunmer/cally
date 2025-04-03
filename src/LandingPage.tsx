@@ -7,22 +7,9 @@ import { useScheduleContext } from './ScheduleContext';
 import IconGoogleCalendar from "./assets/icon-google-calendar.svg?react";
 import IconIcalCalendar from "./assets/icon-ical-calendar.svg?react";
 import IconOutlookCalendar from "./assets/icon-outlook-calendar.svg?react";
-import IconJournal from "./assets/icon-journal.svg?react";
-import IconBook from "./assets/icon-book.svg?react";
-import IconYoga from "./assets/icon-yoga.svg?react";
-import IconDigitalDetox from "./assets/icon-digital-detox.svg?react";
-import IconMorning from "./assets/icon-morning.svg?react";
-import IconMoney from "./assets/icon-money.svg?react";
-import IconGratitude from "./assets/icon-gratitude.svg?react";
-import IconTraining from "./assets/icon-training.svg?react";
-import IconWalking from "./assets/icon-walking.svg?react";
-import IconLanguage from "./assets/icon-language.svg?react";
-import IconFood from "./assets/icon-food.svg?react";
-import IconMeditate from "./assets/icon-meditate.svg?react";
-import IconWater from "./assets/icon-water.svg?react";
-import IconPrompt from "./assets/icon-prompt.svg?react";
 import SuggestedSchedule from './components/SuggestedSchedule';
 import MySchedules from './components/MySchedules';
+import Gallery from './components/Gallery';
 
 
 function LandingPage() {
@@ -51,14 +38,13 @@ function LandingPage() {
     if (query.length < 6) return;
     setCreateScheduleLoading(true);
     try {
-      await suggestSchedule(query);
+      const eventFound = await suggestSchedule(query);
+      if (eventFound) {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }
     } catch (err: any) {
       console.error(err);
     } finally {
-      window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: 'smooth'
-      });
       setCreateScheduleLoading(false);
     }
   };
@@ -73,7 +59,7 @@ function LandingPage() {
           Any goal or habit tailored for your calendar
         </span>
         <p className="mt-4 md:text-lg text-gray-600 dark:text-neutral-400 max-w-[700px]">
-        Enter any goal or habit you'd like to adopt, and Calera will carefully plan it and add it to your calendar
+          Enter any goal or habit you'd like to adopt, and Calera will carefully plan it and add it to your calendar
         </p>
         <div className="sm:flex auto-cols-max items-center gap-3 md:gap-6 mt-6">
           <span className="block text-xs font-semibold uppercase mb-3 sm:mb-0 dark:text-white">
@@ -151,141 +137,7 @@ function LandingPage() {
               </form>
               <div className="my-12">
                 <h2 className="text-xl font-bold md:text-3xl text-gray-800 mb-4">Ideas for habits & goals</h2>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Read 15 mins every day for 7 days')}
-                >
-                  <IconBook />
-                  Read 15 Mins Every Day For A Week
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Learn to meditate in 14 days')}
-                >
-                  <IconMeditate />
-                  Start Meditating: A 14-day Journey
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('4-week meal prep challenge with a simple, beginner-friendly recipe for each Sunday')}
-                >
-                  <IconBook />
-                  4-Week Sunday Meal Prep Challenge
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('Drink water 4x daily for 7 days')}
-                >
-                  <IconWater />
-                  Hydration Challenge: Drink Water 4x Daily For 7 Days
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() => setQuery('AI fundamentals: Learn AI prompting in 3 days')}
-                >
-                  <IconPrompt />
-                  AI Fundamentals: Learn AI Prompting In 3 Days
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('10-Day Journaling Challenge: Spend 5 minutes each day reflecting on a prompt or gratitude list')
-                  }
-                >
-                  <IconJournal />
-                  10-Day Journaling Challenge
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('14-Day Morning Yoga Routine: Start every day with a short, energizing yoga flow')
-                  }
-                >
-                  <IconYoga />
-                  14-Day Morning Yoga Routine
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('7-Day Digital Detox: Limit social media or screen time to 30 minutes daily')
-                  }
-                >
-                  <IconDigitalDetox />
-                  7-Day Digital Detox
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('14-Day Gratitude Practice: Write down 3 things you’re grateful for each morning')
-                  }
-                >
-                  <IconGratitude />
-                  14-Day Gratitude Practice
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('7-Day Push-Up Progression: Add a few more push-ups each day to build strength')
-                  }
-                >
-                  <IconTraining />
-                  7-Day Push-Up Progression
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('7-Day Daily Walk Challenge: Walk for 20 minutes each day')
-                  }
-                >
-                  <IconWalking />
-                  7-Day Daily Walk Challenge
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('14-Day Mindful Eating: Slow down and savor each meal while practicing portion control')
-                  }
-                >
-                  <IconFood />
-                  14-Day Mindful Eating
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('10-Day Early Riser: Wake up 30 minutes earlier to enjoy a calm and productive morning')
-                  }
-                >
-                  <IconMorning />
-                  10-Day Early Riser
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('14-Day Budget & Expense Tracking: Record every purchase to build better spending habits')
-                  }
-                >
-                  <IconMoney />
-                  14-Day Budget & Expense Tracking
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('7-Day Posture Improvement: Do quick posture checks and exercises throughout your day')
-                  }
-                >
-                  <IconWalking />
-                  7-Day Posture Improvement
-                </a>
-                <a
-                  className="mr-2 mb-4 cursor-pointer inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-sm border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white"
-                  onClick={() =>
-                    setQuery('Learn basic Spanish in 7 days')
-                  }
-                >
-                  <IconLanguage />
-                  Learn basic Spanish in 7 days
-                </a>
-                
+                <Gallery setQuery={setQuery} />
               </div>
               <SuggestedSchedule />
             </div>
