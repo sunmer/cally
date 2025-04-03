@@ -15,7 +15,7 @@ const scheduleTemplates = [
   {
     scheduleText: 'Start Meditating: A 7 Day Journey',
     tooltipId: 'tooltip-2',
-    peopleCount: '45',
+    followerCount: '45',
     imageUrl:
       'https://images.unsplash.com/photo-1471520201477-47a62a269a87?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -23,7 +23,7 @@ const scheduleTemplates = [
   {
     scheduleText: 'Hydration Challenge: Drink Water 4x Daily For 7 Days',
     tooltipId: 'tooltip-3',
-    peopleCount: '99+',
+    followerCount: '99+',
     imageUrl:
       'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -31,7 +31,7 @@ const scheduleTemplates = [
   {
     scheduleText: 'AI Fundamentals: Learn Prompting In 3 Days',
     tooltipId: 'tooltip-4',
-    peopleCount: '62',
+    followerCount: '62',
     imageUrl:
       'https://images.unsplash.com/photo-1636690513351-0af1763f6237?q=80&w=2942&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -39,7 +39,7 @@ const scheduleTemplates = [
   {
     scheduleText: 'Learning To Journal: A 7 Day Challenge',
     tooltipId: 'tooltip-5',
-    peopleCount: '18',
+    followerCount: '18',
     imageUrl:
       'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=2873&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -47,7 +47,7 @@ const scheduleTemplates = [
   {
     scheduleText: 'Daily Posture Reminders For A Week',
     tooltipId: 'tooltip-6',
-    peopleCount: '174',
+    followerCount: '174',
     imageUrl:
       'https://images.unsplash.com/photo-1539815208687-a0f05e15d601?q=80&w=2874&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -55,7 +55,7 @@ const scheduleTemplates = [
   {
     scheduleText: '7-Day No Junk Food Challenge',
     tooltipId: 'tooltip-7',
-    peopleCount: '219',
+    followerCount: '219',
     imageUrl:
       'https://images.unsplash.com/photo-1611915365928-565c527a0590?q=80&w=2825&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -63,7 +63,7 @@ const scheduleTemplates = [
   {
     scheduleText: '2 Weeks of Morning Yoga',
     tooltipId: 'tooltip-8',
-    peopleCount: '60',
+    followerCount: '60',
     imageUrl:
       'https://images.unsplash.com/photo-1554067559-269708c83fb6?q=80&w=2788&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -71,7 +71,7 @@ const scheduleTemplates = [
   {
     scheduleText: 'Digital Detox 2 Hours Daily For A Week',
     tooltipId: 'tooltip-9',
-    peopleCount: '210',
+    followerCount: '210',
     imageUrl:
       'https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -79,7 +79,7 @@ const scheduleTemplates = [
   {
     scheduleText: '7-Day Push-Up Progression',
     tooltipId: 'tooltip-10',
-    peopleCount: '87',
+    followerCount: '87',
     imageUrl:
       'https://images.unsplash.com/photo-1626552914894-9ee320d3611c?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -87,7 +87,7 @@ const scheduleTemplates = [
   {
     scheduleText: '7-Day Daily Walk Challenge',
     tooltipId: 'tooltip-11',
-    peopleCount: '43',
+    followerCount: '43',
     imageUrl:
       'https://images.unsplash.com/photo-1517342151243-c5c3f3de7c85?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -95,7 +95,7 @@ const scheduleTemplates = [
   {
     scheduleText: '14-Day Mindful Eating',
     tooltipId: 'tooltip-12',
-    peopleCount: '76',
+    followerCount: '76',
     imageUrl:
       'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=2960&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -103,7 +103,7 @@ const scheduleTemplates = [
   {
     scheduleText: '10-Day Early Riser',
     tooltipId: 'tooltip-13',
-    peopleCount: '189',
+    followerCount: '189',
     imageUrl:
       'https://images.unsplash.com/photo-1547560488-bae538ffad63?q=80&w=2837&auto=format&fit=crop&ixlib=rb-4.0.3',
     altText: 'Gallery Masonry Image',
@@ -125,10 +125,10 @@ const ScheduleTemplate = ({ item, index, onClick, isLoading }) => (
     )}
     <span
       data-tooltip-id={item.tooltipId}
-      data-tooltip-content={`${item.peopleCount} people following`}
+      data-tooltip-content={`${item.followerCount} people following`}
       className="absolute cursor-pointer z-10 top-[20px] right-[20px] inline-flex items-center gap-1 py-1 px-2 min-w-[60px] rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-2 bg-black bg-opacity-50 text-white"
     >
-      {item.peopleCount}
+      {item.followerCount}
       <Users className="w-4 h-4 shrink-0" />
       <Tooltip id={item.tooltipId} />
     </span>
