@@ -3,7 +3,6 @@ import { defaultOptions } from '../config';
 import { ErrorLog } from '../ui/error-log';
 import { tooltip } from '../ui/tooltip';
 import { sourceViewer } from '../ui/source-viewer';
-import { contentViewer } from '../ui/content-viewer';
 import { formatError, extractErrorInfo } from './error-handler';
 
 /**

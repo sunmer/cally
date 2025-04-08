@@ -1,8 +1,7 @@
 import { LoggerOptions, ErrorInfo } from '../types';
-import { escapeHTML, truncateText } from './utils';
+import { truncateText } from './utils';
 import { tooltip } from './tooltip';
 import { sourceViewer } from './source-viewer';
-import { contentViewer } from './content-viewer';
 import { fetchAIFix } from '../services/ai-service';
 
 /**

@@ -1,5 +1,6 @@
 import { ErrorInfo, AIFixResponse } from '../types';
 import { contentViewer } from '../ui/content-viewer';
+import { AIFixCache } from './ai-cache-service';
 
 /**
  * Fetches an AI-generated fix for an error.
@@ -10,6 +11,35 @@ export const fetchAIFix = async (errorInfo: ErrorInfo): Promise<void> => {
     contentViewer.showLoading();
     contentViewer.initStreamStructure();
 
+    // Check if we have a cached fix for this error
+    const cache = AIFixCache.getInstance();
+    const cachedFix = cache.getCachedFix(errorInfo);
+
+    if (cachedFix) {
+      console.log("Using cached AI fix");
+      
+      // Initialize the structure just like with a new request
+      contentViewer.initStreamStructure();
+      
+      // Use the cached response
+      if (cachedFix.issue) {
+        contentViewer.updateIssue(cachedFix.issue);
+      }
+      
+      if (cachedFix.fix && Array.isArray(cachedFix.fix)) {
+        contentViewer.updateFix(cachedFix.fix);
+      }
+      
+      if (cachedFix.codeExample) {
+        contentViewer.updateCodeExample(cachedFix.codeExample);
+      }
+      
+      // If there was loading state shown, it should naturally 
+      // disappear as we populate the content
+      return;
+    }
+
+    // No cached fix, fetch from API
     const response = await fetch(`http://localhost:3000/api/suggest/error`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -119,6 +149,12 @@ export const fetchAIFix = async (errorInfo: ErrorInfo): Promise<void> => {
         console.log("Stream complete");
         // Final processing of any remaining data
         processBuffer();
+        
+        // Cache the complete fix
+        if (Object.keys(partialData).length > 0) {
+          cache.cacheFix(errorInfo, partialData as AIFixResponse);
+        }
+        
         break;
       }
 
